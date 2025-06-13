@@ -1,0 +1,153 @@
+<!-- main.component.html -->
+<section class="section">
+  <div class="container">
+    <div class="tabs is-toggle is-fullwidth">
+      <ul>
+        <li [class.is-active]="activeTab === 'equipes'">
+          <a (click)="activeTab = 'equipes'">Mes équipes</a>
+        </li>
+        <li [class.is-active]="activeTab === 'creneaux'">
+          <a (click)="activeTab = 'creneaux'">Mes créneaux</a>
+        </li>
+        <li [class.is-active]="activeTab === 'calendrier'">
+          <a (click)="activeTab = 'calendrier'">Calendrier</a>
+        </li>
+        <li [class.is-active]="activeTab === 'planification'">
+          <a (click)="activeTab = 'planification'">Planifier mes matchs</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ONGLET MES EQUIPES -->
+    <div *ngIf="activeTab === 'equipes'">
+      <table class="table is-fullwidth is-hoverable">
+        <thead>
+          <tr>
+            <th>Nom équipe</th>
+            <th>Catégorie</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of equipesEngagees">
+            <td>{{ e.nom }}</td>
+            <td>{{ getCategorieNom(e.categorie) }}</td>
+            <td>
+              <button class="button is-primary is-outlined is-rounded" (click)="supprimerEquipe(e)">Supprimer</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="modeAjoutEquipe">
+        <div class="field">
+          <label class="label">Nom de l'équipe</label>
+          <div class="control">
+            <input class="input" [(ngModel)]="nouvelleEquipe.nom">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Catégorie</label>
+          <div class="control">
+            <div class="select">
+              <select [(ngModel)]="nouvelleEquipe.categorie">
+                <option *ngFor="let c of categories" [value]="c.id">{{ c.nom }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="buttons">
+          <button class="button is-primary" (click)="creerEquipe()">Créer</button>
+          <button class="button is-danger" (click)="modeAjoutEquipe = false">Retour</button>
+        </div>
+      </div>
+
+      <div *ngIf="!modeAjoutEquipe" class="has-text-centered">
+        <button class="button is-link is-light" (click)="modeAjoutEquipe = true">Ajouter une équipe</button>
+      </div>
+    </div>
+
+    <!-- ONGLET MES CRENEAUX -->
+    <div *ngIf="activeTab === 'creneaux'">
+      <div class="buttons">
+        <button class="button is-primary" (click)="modeCreneau = 'periodique'">Créer un créneau périodique</button>
+        <button class="button is-link" (click)="modeCreneau = 'unique'">Créer un créneau unique</button>
+      </div>
+
+      <div *ngIf="modeCreneau === null">
+        <table class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Heure début</th>
+              <th>Heure fin</th>
+              <th>Gymnase</th>
+              <th>Match(s)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of creneaux">
+              <td>{{ c.date }}</td>
+              <td>{{ c.heure_debut }}</td>
+              <td>{{ c.heure_fin }}</td>
+              <td>{{ c.gymnase }}</td>
+              <td>
+                <div *ngFor="let m of getMatchsPourCreneau(c.id)">
+                  {{ getCategorieNom(m.categorie) }} : {{ getEquipeNom(m.domicile) }} - {{ getEquipeNom(m.exterieur) }}
+                </div>
+              </td>
+              <td>
+                <button *ngIf="!aDesMatchs(c.id)" class="button is-small is-info" (click)="modifierCreneau(c)">Modifier</button>
+                <button class="button is-small is-danger" (click)="confirmerSuppressionCreneau(c)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Ajout/Maj créneau -->
+      <div *ngIf="modeCreneau">
+        <!-- formulaire selon type (unique/periodique) à implémenter dans le TS) -->
+        <app-formulaire-creneau [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()"></app-formulaire-creneau>
+      </div>
+    </div>
+
+    <!-- ONGLET CALENDRIER -->
+    <div *ngIf="activeTab === 'calendrier'">
+      <app-filtre-calendrier
+        [clubs]="clubs"
+        [categories]="categories"
+        [equipes]="equipesEngagees"
+        (filtreChange)="majFiltres($event)"></app-filtre-calendrier>
+
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Catégorie</th>
+            <th>Domicile</th>
+            <th>Extérieur</th>
+            <th>Club recevant</th>
+            <th>Gymnase</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let match of matchsFiltres">
+            <td>{{ getDateDuMatch(match) }}</td>
+            <td>{{ getCategorieNom(match.categorie) }}</td>
+            <td>{{ getEquipeNom(match.domicile) }}</td>
+            <td>{{ getEquipeNom(match.exterieur) }}</td>
+            <td>{{ getNomClub(match.club_recevant) }}</td>
+            <td>{{ getGymnase(match.creneau_choisi) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ONGLET PLANIFICATION (placeholder) -->
+    <div *ngIf="activeTab === 'planification'">
+      <p class="has-text-centered">En cours de développement...</p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,54 @@
+<div *ngIf="mode" class="box">
+  <h3 class="title is-5">
+    {{ mode === 'periodique' ? 'Créer un créneau périodique' : 'Créer un créneau unitaire' }}
+  </h3>
+
+  <div class="field">
+    <label class="label">Date</label>
+    <div class="control">
+      <input type="date" class="input" [(ngModel)]="date" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Heure de début</label>
+    <div class="control">
+      <input type="time" class="input" [(ngModel)]="heureDebut" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Heure de fin</label>
+    <div class="control">
+      <input type="time" class="input" [(ngModel)]="heureFin" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Gymnase</label>
+    <div class="control">
+      <input type="text" class="input" [(ngModel)]="gymnase" />
+    </div>
+  </div>
+
+  <div *ngIf="mode === 'periodique'">
+    <div class="field">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="vacances" />
+        Maintenu pendant les vacances
+      </label>
+    </div>
+
+    <div class="field">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="joursFeries" />
+        Maintenu pendant les jours fériés
+      </label>
+    </div>
+  </div>
+
+  <div class="buttons mt-4">
+    <button class="button is-primary" (click)="valider()">Créer</button>
+    <button class="button is-danger" (click)="annuler()">Retour</button>
+  </div>
+</div>
