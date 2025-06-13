@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Categorie, Club, Creneau, EquipeEngagee, Match } from 'src/app/class';
 import { DbService } from 'src/app/db.service';
@@ -28,9 +29,13 @@ export class MainComponent implements OnInit {
   // Filtres
   matchsFiltres: Match[] = [];
 
-  constructor(private db: DbService) {}
+  constructor(private db: DbService,private router:Router) {}
 
   async ngOnInit() {
+    if(!this.db.selectedClub || this.db.selectedClub<1){
+      this.router.navigate(['/']);
+      return;
+    }
     await this.chargerTout();
   }
 
@@ -55,9 +60,9 @@ export class MainComponent implements OnInit {
     return this.clubs.find(c => c.id === id)?.nom || 'N/C';
   }
 
-  getGymnase(creneauId: number): string {
-    const c = this.creneaux.find(c => c.id === creneauId);
-    return c ? `${c.gymnase} (${c.heure_debut}–${c.heure_fin})` : '—';
+  getGymnase(m: Match): string {
+    const c = this.creneaux.find(c => c.id === m.creneau_choisi);
+    return c?.gymnase || '—';
   }
 
   getDateDuMatch(m: Match): string {
@@ -93,33 +98,38 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
   }
 
   async genererMatchsPourCategorie(categorieId: number) {
-    const equipes = this.equipesEngagees.filter(
-  e => Number(e.categorie) === Number(categorieId)
-);
-    const matchSet = new Set<string>();
+  const equipes = this.equipesEngagees.filter(
+    e => Number(e.categorie) === Number(categorieId)
+  );
 
-    for (let i = 0; i < equipes.length; i++) {
-      console.log(i);
-      for (let j = 0; j < equipes.length; j++) {
-      console.log(j);
-        if (i !== j) {
-          console.log(`${equipes[i].id}-${equipes[j].id}`);
-          const key = `${equipes[i].id}-${equipes[j].id}`;
-          if (!matchSet.has(key)) {
-            matchSet.add(key);
-            await firstValueFrom(this.db.createMatch({
-              id: 0,
-              categorie: categorieId,
-              domicile: equipes[i].id,
-              exterieur: equipes[j].id,
-              creneau_choisi: 0,
-              club_recevant: this.equipesEngagees.find(x => x.id = equipes[i].id).club
-            }));
-          }
+  // Générer un set des matchs déjà existants (clef : "domicile-exterieur")
+  const existingMatchKeys = new Set(
+    this.matchs
+      .filter(m => Number(m.categorie) === Number(categorieId))
+      .map(m => `${m.domicile}-${m.exterieur}`)
+  );
+
+  for (let i = 0; i < equipes.length; i++) {
+    for (let j = 0; j < equipes.length; j++) {
+      if (i !== j) {
+        const key = `${equipes[i].id}-${equipes[j].id}`;
+
+        if (!existingMatchKeys.has(key)) {
+          existingMatchKeys.add(key); // ajoute à la liste pour éviter les doublons pendant la boucle
+          await firstValueFrom(this.db.createMatch({
+            id: 0,
+            categorie: categorieId,
+            domicile: equipes[i].id,
+            exterieur: equipes[j].id,
+            creneau_choisi: 0,
+            club_recevant: equipes[i].club // tu as fait une erreur ici : `=` au lieu de `===` dans le find
+          }));
         }
       }
     }
   }
+}
+
 
   getMatchsPourCreneau(cId: number): Match[] {
     return this.matchs.filter(m => m.creneau_choisi === cId);
@@ -142,6 +152,7 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
   modifierCreneau(c: Creneau) {
     // Tu pourrais ici ouvrir un mode édition si besoin
     this.modeCreneau = 'unique';
+    
     // Et passer les données à un composant ou form
   }
 
@@ -153,6 +164,7 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
   }
 
   majFiltres(filtre: any) {
+    console.log(filtre);
     this.matchsFiltres = this.matchs.filter(m => {
       if (filtre.categories?.length && !filtre.categories.includes(m.categorie)) return false;
       if (filtre.equipes?.length && !filtre.equipes.includes(m.domicile) && !filtre.equipes.includes(m.exterieur)) return false;

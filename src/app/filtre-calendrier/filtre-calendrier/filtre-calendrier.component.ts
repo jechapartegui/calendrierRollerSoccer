@@ -16,17 +16,20 @@ export class FiltreCalendrierComponent {
     clubId: number | null;
     categorieId: number | null;
     equipeId: number | null;
+    planifie: boolean;
   }>();
 
   selectedClub: number | null = null;
   selectedCategorie: number | null = null;
   selectedEquipe: number | null = null;
+  selectedPlanified : boolean = false;
 
   onChange() {
     this.filtreChange.emit({
       clubId: this.selectedClub,
       categorieId: this.selectedCategorie,
-      equipeId: this.selectedEquipe
+      equipeId: this.selectedEquipe,
+      planifie:this.selectedPlanified,
     });
   }
 

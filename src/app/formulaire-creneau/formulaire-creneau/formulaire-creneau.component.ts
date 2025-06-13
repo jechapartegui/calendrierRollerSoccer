@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Creneau } from 'src/app/class';
+import { firstValueFrom } from 'rxjs';
 import { DbService } from 'src/app/db.service';
 
 @Component({
@@ -13,11 +14,14 @@ export class FormulaireCreneauComponent {
   @Output() done = new EventEmitter<void>();
 
   date: Date;
+  jour = 'dimanche';
   heureDebut: string = '';
   heureFin: string = '';
   gymnase: string = '';
   vacances: boolean = false;
   joursFeries: boolean = false;
+minDateStr = '2025-09-01';
+maxDateStr = '2026-05-31';
 
   constructor(private db: DbService) {}
 
@@ -26,7 +30,7 @@ export class FormulaireCreneauComponent {
 
     if (this.mode === 'periodique') {
       const data = {
-        date: this.date,
+        jour: this.jour,
         heure_debut: this.heureDebut,
         heure_fin: this.heureFin,
         gymnase: this.gymnase,
@@ -38,15 +42,17 @@ export class FormulaireCreneauComponent {
     }
 
     if (this.mode === 'unique') {
+      const dateObj = new Date(this.date);
+      dateObj.setHours(12, 0, 0, 0);
       const creneau: Creneau = {
         id:0,
-        date: this.date,
+        date: dateObj,
         heure_debut: this.heureDebut,
         heure_fin: this.heureFin,
         gymnase: this.gymnase,
         club: club
       };
-      await this.db.createCreneau(creneau);
+      await firstValueFrom(this.db.createCreneau(creneau));
     }
 
     this.done.emit();

@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from './class';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DbService {
-  procedureCreerCreneauPeriodique(data: { date: Date; heure_debut: string; heure_fin: string; gymnase: string; club: number; vacances: boolean; jours_feries: boolean; }) {
-    throw new Error('Method not implemented.');
+  async procedureCreerCreneauPeriodique(data: { jour: string; heure_debut: string; heure_fin: string; gymnase: string; club: number; vacances: boolean; jours_feries: boolean; }) {
+   const club = await firstValueFrom(this.getOneClub(this.selectedClub));
+   const calendriers = await firstValueFrom(this.getCalendriers());
+   let dates = calendriers.filter(x => x.pays== club.pays)
   }
   private apiUrl = 'http://localhost:3300/api';
 public selectedClub :number;

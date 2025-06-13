@@ -88,7 +88,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of creneaux">
-              <td>{{ c.date }}</td>
+              <td>{{ c.date | date: 'dd/MM/yyyy' }}</td>
               <td>{{ c.heure_debut }}</td>
               <td>{{ c.heure_fin }}</td>
               <td>{{ c.gymnase }}</td>
@@ -129,7 +129,9 @@
             <th>Domicile</th>
             <th>Extérieur</th>
             <th>Club recevant</th>
+            <th>Créneau</th>
             <th>Gymnase</th>
+            <th>Planifié</th>
           </tr>
         </thead>
         <tbody>
@@ -139,7 +141,8 @@
             <td>{{ getEquipeNom(match.domicile) }}</td>
             <td>{{ getEquipeNom(match.exterieur) }}</td>
             <td>{{ getNomClub(match.club_recevant) }}</td>
-            <td>{{ getGymnase(match.creneau_choisi) }}</td>
+            <td>{{ getGymnase(match) }}</td>
+            <td>{{ match.creneau_choisi == 0 ? "non" : "oui"}}</td>
           </tr>
         </tbody>
       </table>

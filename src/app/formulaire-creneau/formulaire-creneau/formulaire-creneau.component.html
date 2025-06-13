@@ -4,9 +4,28 @@
   </h3>
 
   <div class="field">
-    <label class="label">Date</label>
+    <label class="label">
+      <span *ngIf="mode === 'periodique'">Jour de la semaine</span>
+      <span *ngIf="mode !== 'periodique'">Date</span></label>
     <div class="control">
-      <input type="date" class="input" [(ngModel)]="date" />
+      <input
+  *ngIf="mode !== 'periodique'"
+  type="date"
+  class="input"
+[min]="minDateStr"
+  [max]="maxDateStr"
+  [(ngModel)]="date"
+  (ngModelChange)="date = $event"
+/>
+      <select *ngIf="mode === 'periodique'" [(ngModel)]="jour">
+        <option value="lundi">lundi</option>
+        <option value="mardi">mardi</option>
+        <option value="mercredi">mercredi</option>
+        <option value="jeudi">jeudi</option>
+        <option value="vendredi">vendredi</option>
+        <option value="samedi">samedi</option>
+        <option value="dimanche">dimanche</option>
+      </select>
     </div>
   </div>
 
