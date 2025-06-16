@@ -9,11 +9,14 @@
         <li [class.is-active]="activeTab === 'creneaux'">
           <a (click)="activeTab = 'creneaux'">Mes créneaux</a>
         </li>
-        <li [class.is-active]="activeTab === 'calendrier'">
-          <a (click)="activeTab = 'calendrier'">Calendrier</a>
+        <li [class.is-active]="activeTab === 'matchs'">
+          <a (click)="activeTab = 'matchs'">Matchs</a>
         </li>
         <li [class.is-active]="activeTab === 'planification'">
           <a (click)="activeTab = 'planification'">Planifier mes matchs</a>
+        </li>
+        <li [class.is-active]="activeTab === 'calendrier'">
+          <a (click)="activeTab = 'calendrier'">Calendrier</a>
         </li>
       </ul>
     </div>
@@ -29,11 +32,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of equipesEngagees">
+          <tr *ngFor="let e of equipesEngageesFiltres">
             <td>{{ e.nom }}</td>
             <td>{{ getCategorieNom(e.categorie) }}</td>
             <td>
-              <button class="button is-primary is-outlined is-rounded" (click)="supprimerEquipe(e)">Supprimer</button>
+              <button class="button is-small is-danger" (click)="supprimerEquipe(e)">Supprimer</button>
             </td>
           </tr>
         </tbody>
@@ -87,7 +90,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let c of creneaux">
+            <tr *ngFor="let c of creneauxFiltres">
               <td>{{ c.date | date: 'dd/MM/yyyy' }}</td>
               <td>{{ c.heure_debut }}</td>
               <td>{{ c.heure_fin }}</td>
@@ -114,7 +117,7 @@
     </div>
 
     <!-- ONGLET CALENDRIER -->
-    <div *ngIf="activeTab === 'calendrier'">
+    <div *ngIf="activeTab === 'matchs'">
       <app-filtre-calendrier
         [clubs]="clubs"
         [categories]="categories"
@@ -129,19 +132,18 @@
             <th>Domicile</th>
             <th>Extérieur</th>
             <th>Club recevant</th>
-            <th>Créneau</th>
             <th>Gymnase</th>
             <th>Planifié</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let match of matchsFiltres">
-            <td>{{ getDateDuMatch(match) }}</td>
+            <td>{{ match.creneau?.date.toLocaleDateString() || '—' }}</td>
             <td>{{ getCategorieNom(match.categorie) }}</td>
             <td>{{ getEquipeNom(match.domicile) }}</td>
             <td>{{ getEquipeNom(match.exterieur) }}</td>
             <td>{{ getNomClub(match.club_recevant) }}</td>
-            <td>{{ getGymnase(match) }}</td>
+<td>{{ match.creneau?.gymnase || '—' }}</td>
             <td>{{ match.creneau_choisi == 0 ? "non" : "oui"}}</td>
           </tr>
         </tbody>
