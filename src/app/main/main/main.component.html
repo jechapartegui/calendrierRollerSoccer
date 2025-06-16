@@ -101,7 +101,6 @@
                 </div>
               </td>
               <td>
-                <button *ngIf="!aDesMatchs(c.id)" class="button is-small is-info" (click)="modifierCreneau(c)">Modifier</button>
                 <button class="button is-small is-danger" (click)="confirmerSuppressionCreneau(c)">Supprimer</button>
               </td>
             </tr>
@@ -112,7 +111,7 @@
       <!-- Ajout/Maj créneau -->
       <div *ngIf="modeCreneau">
         <!-- formulaire selon type (unique/periodique) à implémenter dans le TS) -->
-        <app-formulaire-creneau [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()"></app-formulaire-creneau>
+        <app-formulaire-creneau [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()" (creneaux)="CreerPeriodique($event)"></app-formulaire-creneau>
       </div>
     </div>
 
@@ -138,7 +137,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let match of matchsFiltres">
-            <td>{{ match.creneau?.date.toLocaleDateString() || '—' }}</td>
+            <td>{{ getDateMatch(match) }}</td>
             <td>{{ getCategorieNom(match.categorie) }}</td>
             <td>{{ getEquipeNom(match.domicile) }}</td>
             <td>{{ getEquipeNom(match.exterieur) }}</td>
@@ -152,7 +151,34 @@
 
     <!-- ONGLET PLANIFICATION (placeholder) -->
     <div *ngIf="activeTab === 'planification'">
-      <p class="has-text-centered">En cours de développement...</p>
+      <app-match-planning  
+  [evaluerCreneau]="EvaluerCreneau.bind(this)" [creneaux]="creneaux" [categorie]="categories" [matchs]="matchs" [equipesEngagees]="equipesEngagees" (done)="rafraichirCreneaux()"></app-match-planning>
     </div>
+    <div *ngIf="activeTab === 'calendrier'">
+   <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Match</th>
+            <th>Evenement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cal of calendrierComplet"  [class.weekend-row]="isWeekend(cal.date)">
+            <td>{{ cal.date.toLocaleDateString() || '—' }}</td>
+            <td>
+              <ng-container *ngFor="let m of cal.matchs">
+                {{getCategorieNom(m.categorie)}} : {{getEquipeNom(m.domicile)}} - {{ getEquipeNom(m.exterieur)}} <br/>
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngFor="let ev of cal.evenements">
+                {{ev.libelle}} <br/>
+                </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
   </div>
 </section>

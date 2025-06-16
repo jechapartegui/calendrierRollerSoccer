@@ -3,11 +3,13 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from 'src/app/class';
 import { DbService } from 'src/app/db.service';
-type MatchAvecCreneau = Match & { creneau?: Creneau };
-type CalendrierComplet ={
+import { CreneauPeriodique } from 'src/app/formulaire-creneau/formulaire-creneau/formulaire-creneau.component';
+import { CreneauScore } from 'src/app/match-planning/match-planning.component';
+export type MatchAvecCreneau = Match & { creneau?: Creneau };
+export class CalendrierComplet {
   date:Date;
-  evenements:Evenement[];
-  matchs:Match[];
+  evenements:Evenement[] = [];
+  matchs:Match[]= [];
 }
 type Evenement={
   id:number;
@@ -62,10 +64,16 @@ async chargerTout() {
   this.clubs = await firstValueFrom(this.db.getClubs());
   this.creneaux = await firstValueFrom(this.db.getCreneaux());
   this.Calendrier = await firstValueFrom(this.db.getCalendriers());
+  this.Calendrier = this.mapCalendriers(this.Calendrier);
   this.creneauxFiltres = this.creneaux.filter(x => x.club == this.db.selectedClub);
- this.creneauxFiltres.sort((a, b) => {
-    const dateA = a.date?.getTime() ?? Infinity; // Infinity si pas de date
-    const dateB = b.date?.getTime() ?? Infinity;
+   this.creneaux.sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : Infinity;
+    const dateB = b.date ? new Date(b.date).getTime() : Infinity;
+    return dateA - dateB;
+  });
+  this.creneauxFiltres.sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : Infinity;
+    const dateB = b.date ? new Date(b.date).getTime() : Infinity;
     return dateA - dateB;
   });
   const matchsBruts = await firstValueFrom(this.db.getMatchs());
@@ -81,48 +89,110 @@ private enrichirEtTrierMatchs(matchs: Match[]): MatchAvecCreneau[] {
   }));
 
   return enrichis.sort((a, b) => {
-    const dateA = a.creneau?.date?.getTime() ?? Infinity; // Infinity si pas de date
-    const dateB = b.creneau?.date?.getTime() ?? Infinity;
+   const dateA = a.creneau?.date ? new Date(a.creneau.date).getTime() : Infinity;
+  const dateB = b.creneau?.date ? new Date(b.creneau.date).getTime() : Infinity;
     return dateA - dateB;
   });
 }
 
-private enrichirCalendrier() : CalendrierComplet[]{
-const debut = new Date(2025, 8, 1); // 1er septembre 2025 (mois 8 car indexé à 0)
-const fin = new Date(2026, 4, 31);  // 31 mai 2026
-let calcomp :CalendrierComplet[] = [];
-const toutesLesDates: Date[] = [];
-
-let date = new Date(debut);
-while (date <= fin) {
-  let unjour:CalendrierComplet={date:date, evenements:[], matchs:[]};
-  if(this.Calendrier.find(x => x.date_debut ==  date && !x.date_fin )){
-    let ev:Evenement={
-      id:this.Calendrier.find(x => x.date_debut ==  date).id,
-      type : "jour férié",
-      zone : this.Calendrier.find(x => x.date_debut ==  date).pays,
-      priorite:3,
-      libelle: "Jour férié dans la zone " + (this.Calendrier.find(x => x.date_debut ==  date).pays == 1 ? "IDF" : this.Calendrier.find(x => x.date_debut ==  date).pays == 2 ? "Belge" : "Sud")
-    }
-    unjour.evenements.push(ev);
-  }
-    if(this.Calendrier.find(x => x.date_debut && x.date_fin && x.date_debut>= date && date <= x.date_fin )){
-    let ev:Evenement={
-      id:this.Calendrier.find(x => x.date_debut && x.date_fin && x.date_debut>= date && date <= x.date_fin ).id,
-      type : "vacances",
-      zone : this.Calendrier.find(x => x.date_debut && x.date_fin && x.date_debut>= date && date <= x.date_fin ).pays,
-      priorite:3,
-      libelle: "Vacances dans la zone " + (this.Calendrier.find(x => x.date_debut ==  date).pays == 1 ? "IDF" : this.Calendrier.find(x => x.date_debut ==  date).pays == 2 ? "Belge" : "Sud")
-    }
-    unjour.evenements.push(ev);
-  }
-  calcomp.push(unjour);
-  date.setDate(date.getDate() + 1);    // on passe au jour suivant
-}
-return calcomp;
+mapCalendriers(calendriers: any[]): any[] {
+  return calendriers.map(c => ({
+    ...c,
+    date_debut: new Date(c.date_debut),
+    date_fin: c.date_fin ? new Date(c.date_fin) : null
+  }));
 }
 
 
+private enrichirCalendrier(): CalendrierComplet[] {
+  const debut = new Date(2025, 8, 1); // 1er septembre 2025
+  const fin = new Date(2026, 5, 30);  // 30 juin 2026
+  let calcomp: CalendrierComplet[] = [];
+
+  let date = new Date(debut);
+  while (date <= fin) {
+    let unjour: CalendrierComplet = new CalendrierComplet();
+    unjour.date = new Date(date);
+    unjour.evenements = [];
+
+    // 1. Jours fériés sans date_fin
+    const feries = this.Calendrier.filter(x => this.sameDay(date, x.date_debut) && !x.date_fin);
+    for (const f of feries) {
+      const ev: Evenement = {
+        id: f.id,
+        type: "jour férié",
+        zone: f.pays,
+        priorite: 3,
+        libelle: "Jour férié dans la zone " + this.getZoneLibelle(f.pays)
+      };
+      unjour.evenements.push(ev);
+    }
+
+    // 2. Vacances avec une plage (date_debut à date_fin)
+    const vacances = this.Calendrier.filter(x => x.date_debut && x.date_fin && this.plageDay(date, x.date_debut, x.date_fin));
+    for (const v of vacances) {
+      const ev: Evenement = {
+        id: v.id,
+        type: "vacances",
+        zone: v.pays,
+        priorite: 3,
+        libelle: "Vacances dans la zone " + this.getZoneLibelle(v.pays)
+      };
+      unjour.evenements.push(ev);
+    }
+    const matchs = this.matchs.filter(x => x.creneau && this.sameDay(date, new Date(x.creneau.date)) );
+    for (const ev of matchs) {
+      
+      unjour.matchs.push(ev);
+    }
+    calcomp.push(unjour);
+    date.setDate(date.getDate() + 1); // jour suivant
+  }
+
+  return calcomp;
+}
+
+private getZoneLibelle(pays: number): string {
+  switch (pays) {
+    case 0: return "France";
+    case 1: return "zone C France : Ile de France";
+    case 2: return "Belge";
+    case 3: return "zone B France : Sud";
+    default: return "Zone A";
+  }
+}
+isWeekend(date: Date): boolean {
+  const day = date.getDay(); // 0 = dimanche, 6 = samedi
+  return day === 0 || day === 6;
+}
+
+
+
+ sameDay(d1: Date, d2: Date): boolean {
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+}
+ plageDay(d1: Date, d2: Date, d3: Date): boolean {
+  // On "nettoie" les 3 dates pour ne garder que jour/mois/année
+  const clean = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const date = clean(d1);
+  const debut = clean(d2);
+  const fin = clean(d3);
+
+  return date >= debut && date <= fin;
+}
+
+
+ getDateMatch(m: Match): string {
+     const c = this.creneaux.find(c => c.id === m.creneau_choisi);
+     if(c){
+      return new Date(c.date).toLocaleDateString();
+     } else {
+      return "-";
+     }
+  }
   getCategorieNom(id: number): string {
     return this.categories.find(c => c.id === id)?.nom || 'N/C';
   }
@@ -206,6 +276,24 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
   }
 }
 
+checksiVacances(date:Date, pays:number) : boolean {
+let cc = this.calendrierComplet.find(x => this.sameDay(date, x.date))
+
+  if(cc.evenements.find(x => x.type == "vacances" && x.zone == pays)){
+   return true;
+  } else {
+  return false;
+  }
+}
+checksiFerie(date:Date, pays:number) : boolean {
+let cc = this.calendrierComplet.find(x => this.sameDay(date, x.date))
+  if(cc.evenements.find(x => x.type == "jour férié" && ((x.zone == pays) || (x.zone == 0 && pays != 2)))){
+   return true;
+  } else {
+  return false;
+  }
+}
+
 
   getMatchsPourCreneau(cId: number): Match[] {
     return this.matchs.filter(m => m.creneau_choisi === cId);
@@ -217,12 +305,18 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
 
   async confirmerSuppressionCreneau(c: Creneau) {
     const liés = this.getMatchsPourCreneau(c.id);
+    let msg = "Créneau supprimé";
+    if(liés.length>0){
+      msg ="Créneau supprimé, matchs sur le créneau à replanifier";
+    }
     for (let m of liés) {
       m.creneau_choisi = 0;
-      await this.db.updateMatch(m);
+      await firstValueFrom(this.db.updateMatch(m));
     }
-    await this.db.deleteCreneau(c.id);
-    this.creneaux = await firstValueFrom(this.db.getCreneaux());
+    await firstValueFrom(this.db.deleteCreneau(c.id));
+    
+    window.alert(msg);
+    this.chargerTout();
   }
 
   modifierCreneau(c: Creneau) {
@@ -233,11 +327,56 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
   }
 
   async rafraichirCreneaux() {
-    this.creneaux = await firstValueFrom(this.db.getCreneaux());
-    this.matchs = await firstValueFrom(this.db.getMatchs());
-    this.matchsFiltres = [...this.matchs];
     this.modeCreneau = null;
+    this.chargerTout();
   }
+  CreerPeriodique(data:CreneauPeriodique){
+      const jourSemaine = this.convertirJourEnNumero(data.jour); // 0 = dimanche, 1 = lundi, etc.
+  const dateCourante = new Date(data.dateDebut);
+  const dateFin = new Date(data.dateFin);
+
+  while (dateCourante <= dateFin) {
+    if (dateCourante.getDay() === jourSemaine) {
+const creerCreneau = async () => {
+  const nouveauCreneau: Creneau = {
+    id: 0,
+    date: new Date(dateCourante),
+    heure_debut: data.heureDebut,
+    heure_fin: data.heureFin,
+    club: this.db.selectedClub,
+    gymnase: data.gymnase,
+  };
+ await firstValueFrom(this.db.createCreneau(nouveauCreneau));
+};
+      // TODO: vérifier si la date est dans les vacances scolaires ou jour férié
+      const estVacances = this.checksiVacances(new Date(dateCourante), this.clubs.find(x => x.id == this.db.selectedClub).pays); // à implémenter
+      const estJourFerie = this.checksiFerie(new Date(dateCourante), this.clubs.find(x => x.id == this.db.selectedClub).pays);; // à implémenter
+      if(estVacances || estJourFerie){
+        console.log(dateCourante)
+      }
+if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
+  creerCreneau();
+} else if (estJourFerie && data.joursFeries) {
+  creerCreneau();
+} else if (estVacances && data.vacances) {
+  creerCreneau();
+} else if (!estJourFerie && !estVacances) {
+  creerCreneau();
+}
+
+     
+    }
+
+    // Passer au jour suivant
+    dateCourante.setDate(dateCourante.getDate() + 1);
+  }
+}
+
+  convertirJourEnNumero(jour: string): number {
+  const jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  return jours.indexOf(jour.toLowerCase());
+}
+
 
   majFiltres(filtre: any) {
     this.matchsFiltres = this.matchs.filter(m => {
@@ -247,4 +386,138 @@ await firstValueFrom(this.db.deleteEquipe(e.id));
       return true;
     });
   }
+
+ EvaluerCreneau(creneaux: Creneau[], selectedMatch: Match): CreneauScore[] {
+  // Récupérer clubs et pays des équipes domicile et extérieur
+  const clubDom = this.equipesEngagees.find(y => y.id === selectedMatch.domicile)?.club;
+  const clubExt = this.equipesEngagees.find(y => y.id === selectedMatch.exterieur)?.club;
+  const paysDom = this.clubs.find(x => x.id === clubDom)?.pays;
+  const paysExt = this.clubs.find(x => x.id === clubExt)?.pays;
+
+  // Durée nécessaire du match
+  const dureeMatch = this.categories.find(x => x.id === selectedMatch.categorie)?.duree ?? 0;
+
+  return creneaux.map(cr => {
+    let score = 0;
+    const motifs: string[] = [];  // tableau pour accumuler
+
+    const dateCreneau = new Date(cr.date);
+    const dateCreneauPlus1 = new Date(dateCreneau);
+    dateCreneauPlus1.setDate(dateCreneauPlus1.getDate() + 1);
+    const dateCreneauMoins1 = new Date(dateCreneau);
+    dateCreneauMoins1.setDate(dateCreneauMoins1.getDate() - 1);
+
+    // Trouver les jours dans le calendrier complet
+    const jourCreneau = this.calendrierComplet.find(x => this.sameDay(new Date(x.date), dateCreneau));
+    const jourPlus1 = this.calendrierComplet.find(x => this.sameDay(new Date(x.date), dateCreneauPlus1));
+    const jourMoins1 = this.calendrierComplet.find(x => this.sameDay(new Date(x.date), dateCreneauMoins1));
+
+    // 1. Pas un week-end
+    if (dateCreneau.getDay() !== 0 && dateCreneau.getDay() !== 6) {
+      score += 4;
+      motifs.push("Créneau en semaine");
+    }
+
+    // 2. Vacances et jours fériés
+    if (jourCreneau?.evenements) {
+      jourCreneau.evenements.forEach(ev => {
+        if (ev.type === "jour férié" && (ev.zone === paysDom || (ev.zone === 0 && paysDom !== 2))) {
+          score += 3;
+      motifs.push("Jour férié équipe à domicile");
+        }
+        if (ev.type === "jour férié" && (ev.zone === paysExt || (ev.zone === 0 && paysExt !== 2))) {
+          score += 3;
+      motifs.push("Jour férié équipe à l'extérieur");
+        }
+        if (ev.type === "vacances" && ev.zone === paysDom) {
+          score += 5;
+      motifs.push("Vacances pour l'équipe à domicile");
+        }
+        if (ev.type === "vacances" && ev.zone === paysExt) {
+          score += 5;
+      motifs.push("Vacances pour l'équipe à l'extérieur");
+        }
+      });
+    }
+
+    // 3. Calcul durée du créneau en minutes
+    // Supposons que heure_debut et heure_fin sont en heures décimales (ex: 14.5 = 14h30)
+    const debutMin = this.timeStringToMinutes(cr.heure_debut);
+    const finMin = this.timeStringToMinutes(cr.heure_fin);
+    const nbMinCreneau = finMin - debutMin;
+
+    // 4. Total des minutes occupées par des matchs ce jour-là
+    let minutesOccupees = 0;
+
+    if (jourCreneau?.matchs) {
+      jourCreneau.matchs.forEach(mm => {
+        const cat = this.categories.find(x => x.id === mm.categorie);
+        if (cat) minutesOccupees += cat.duree;
+
+        const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
+        const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
+
+        if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
+          score += 2;
+          motifs.push("Club domicile engagé dans un match le même jour");
+        }
+        if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
+          score += 2;
+          motifs.push("Club extérieur engagé dans un match le même jour");
+        }
+      });
+    }
+
+    // 5. Match la veille
+    if (jourMoins1?.matchs) {
+      jourMoins1.matchs.forEach(mm => {
+        const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
+        const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
+
+        if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
+          score += 1;
+          motifs.push("Club domicile engagé dans un match la veille");
+        }
+        if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
+          score += 1;
+          motifs.push("Club extérieur engagé dans un match la veille");
+        }
+      });
+    }
+
+    // 6. Match le lendemain
+    if (jourPlus1?.matchs) {
+      jourPlus1.matchs.forEach(mm => {
+        const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
+        const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
+
+        if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
+          score += 1;
+          motifs.push("Club domicile engagé dans un match le lendemain");
+        }
+        if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
+          score += 1;
+          motifs.push("Club extérieur engagé dans un match le lendemain");
+        }
+      });
+    }
+
+    // 7. Vérifier s'il reste assez de temps libre dans le créneau
+    const minutesRestantes = nbMinCreneau - minutesOccupees;
+    if (minutesRestantes < dureeMatch) {
+      score += 4;
+      motifs.push("Pas assez de temps disponible dans le créneau");
+    }
+    const motif = `<ul>${motifs.map(m => `<li>${m}</li>`).join('')}</ul>`;
+
+    // Retourner l'objet avec score et motif
+    return { ...cr, score, motif };
+  });
+}
+timeStringToMinutes(timeStr: string): number {
+  const [h, m, s] = timeStr.split(':').map(Number);
+  return h * 60 + m + s / 60;
+}
+
+
 }

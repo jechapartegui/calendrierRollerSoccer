@@ -11,6 +11,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { MainComponent } from './main/main/main.component';
 import { FormulaireCreneauComponent } from './formulaire-creneau/formulaire-creneau/formulaire-creneau.component';
 import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier/filtre-calendrier.component';
+import { MatchPlanningComponent } from './match-planning/match-planning.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,7 @@ import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier
     ClubComponent,
     MainComponent,
     FormulaireCreneauComponent,
-    FiltreCalendrierComponent 
+    FiltreCalendrierComponent, MatchPlanningComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

@@ -7,11 +7,7 @@ import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from './cl
   providedIn: 'root'
 })
 export class DbService {
-  async procedureCreerCreneauPeriodique(data: { jour: string; heure_debut: string; heure_fin: string; gymnase: string; club: number; vacances: boolean; jours_feries: boolean; }) {
-   const club = await firstValueFrom(this.getOneClub(this.selectedClub));
-   const calendriers = await firstValueFrom(this.getCalendriers());
-   let dates = calendriers.filter(x => x.pays== club.pays)
-  }
+
   private apiUrl = 'http://localhost:3300/api';
 public selectedClub :number;
   constructor(private http: HttpClient) {}

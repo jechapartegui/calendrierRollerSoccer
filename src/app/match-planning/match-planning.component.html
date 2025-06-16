@@ -1,0 +1,78 @@
+<div class="columns">
+  <div class="column is-half">
+    <h2 class="title is-4">Matchs à planifier</h2>
+    <div class="field">
+      <label class="checkbox">
+        <input type="checkbox" [(ngModel)]="filtreSansCreneau" (change)="loadData()"> Matchs sans créneau uniquement
+      </label>
+    </div>
+    <table class="table is-fullwidth is-striped">
+      <thead>
+        <tr><th>Catégorie</th><th>Rencontre</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of matchsFiltres">
+           <td>{{ getCategorieNom(m.categorie) }}</td>
+          <td>{{ getEquipeNom(m.domicile) }} - {{ getEquipeNom(m.exterieur) }}</td>
+          <td>
+            <button *ngIf="m.creneau_choisi == 0" class="button is-small is-info" (click)="selectMatch(m)">Planifier</button>
+            <button *ngIf="m.creneau_choisi >0" class="button is-small is-warning ml-2" (click)="selectMatch(m)">Retirer</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="column is-half" *ngIf="selectedMatch">
+    <h2 class="title is-4">Planification du match</h2>
+    <button *ngIf="selectedMatch.creneau_choisi" class="button is-danger mb-3" (click)="retirerCreneau()">Retirer le créneau</button>
+
+    <div class="mb-5">
+      <h3 class="subtitle is-5 is-primary">Créneaux recommandés</h3>
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
+        <thead><tr><th>Date</th><th>Heure</th><th>Motif</th><th>Gymnase</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of creneauxRecommandes">
+            <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
+            <td [innerHTML]="c.motif"></td>
+            <td>{{ c.gymnase }}</td>
+            <td><button class="button is-primary is-small" (click)="validerCreneau(c.id)">Valider</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mb-5">
+      <h3 class="subtitle is-5 is-warning">Créneaux acceptables</h3>
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
+        <thead><tr><th>Date</th><th>Heure</th><th>Motif</th><th>Gymnase</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of creneauxNonRecommandes">
+            <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
+            <td [innerHTML]="c.motif"></td>
+            <td>{{ c.gymnase }}</td>
+            <td><button class="button is-warning is-small" (click)="validerCreneau(c.id)">Valider</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3 class="subtitle is-5 is-danger">Créneaux déconseillés</h3>
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
+        <thead><tr><th>Date</th><th>Heure</th><th>Motif</th><th>Gymnase</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of creneauxDeconseilles">
+            <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
+            <td [innerHTML]="c.motif"></td>
+            <td>{{ c.gymnase }}</td>
+            <td><button class="button is-danger is-small" (click)="validerCreneau(c.id)">Valider</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
