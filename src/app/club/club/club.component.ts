@@ -23,6 +23,7 @@ export class ClubComponent implements OnInit {
         if(data){
           //stocker que mon club c'est selectedClub!!
           this.dbService.selectedClub = this.selectedclub;
+          console.log(this.selectedclub);
           this.router.navigate(['/main'])
         }
       },

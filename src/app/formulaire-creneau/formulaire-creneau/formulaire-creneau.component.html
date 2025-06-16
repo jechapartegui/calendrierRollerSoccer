@@ -17,7 +17,9 @@
   [(ngModel)]="date"
   (ngModelChange)="date = $event"
 />
-      <select *ngIf="mode === 'periodique'" [(ngModel)]="jour">
+  <div class="control">
+        <div class="select is-fullwidth">
+      <select  *ngIf="mode === 'periodique'" [(ngModel)]="jour">
         <option value="lundi">lundi</option>
         <option value="mardi">mardi</option>
         <option value="mercredi">mercredi</option>
@@ -26,9 +28,36 @@
         <option value="samedi">samedi</option>
         <option value="dimanche">dimanche</option>
       </select>
+      </div>
     </div>
   </div>
-
+  </div>
+<ng-container *ngIf="mode === 'periodique'">
+  <div class="field">
+    <label class="label">
+      <span >Date de début</span></label>
+    <div class="control">
+      <input
+  type="date"
+  class="input"
+  [(ngModel)]="minDateStr"
+  (ngModelChange)="date = $event"
+/>
+</div>
+</div>
+  <div class="field">
+    <label class="label">
+      <span >Date de fin</span></label>
+    <div class="control">
+      <input
+  type="date"
+  class="input"
+  [(ngModel)]="maxDateStr"
+  (ngModelChange)="date = $event"
+/>
+</div>
+</div>
+</ng-container>
   <div class="field">
     <label class="label">Heure de début</label>
     <div class="control">
