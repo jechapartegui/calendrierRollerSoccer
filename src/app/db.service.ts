@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, Observable } from 'rxjs';
 import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from './class';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DbService {
 
-  private apiUrl = 'http://localhost:3300/api';
+  private apiUrl = environment.apiUrl;
 public selectedClub :number;
   constructor(private http: HttpClient) {}
 
