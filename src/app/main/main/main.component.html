@@ -9,6 +9,9 @@
         <li [class.is-active]="activeTab === 'creneaux'">
           <a (click)="activeTab = 'creneaux'">Mes créneaux</a>
         </li>
+        <li [class.is-active]="activeTab === 'gymnases'">
+          <a (click)="activeTab = 'gymnases'">Mes gymnases</a>
+        </li>
         <li [class.is-active]="activeTab === 'matchs'">
           <a (click)="activeTab = 'matchs'">Matchs</a>
         </li>
@@ -86,6 +89,7 @@
               <th>Heure fin</th>
               <th>Gymnase</th>
               <th>Match(s)</th>
+              <th>Notes</th>
               <th></th>
             </tr>
           </thead>
@@ -94,12 +98,13 @@
               <td>{{ c.date | date: 'dd/MM/yyyy' }}</td>
               <td>{{ c.heure_debut }}</td>
               <td>{{ c.heure_fin }}</td>
-              <td>{{ c.gymnase }}</td>
+              <td>{{ getGymnaseList(c.gymnase) }}</td>
               <td>
                 <div *ngFor="let m of getMatchsPourCreneau(c.id)">
                   {{ getCategorieNom(m.categorie) }} : {{ getEquipeNom(m.domicile) }} - {{ getEquipeNom(m.exterieur) }}
                 </div>
               </td>
+              <td><input type="text" class="input" [(ngModel)]="c.notes" (ngModelChange)="updateCreneau(c)" /> </td>
               <td>
                 <button class="button is-small is-danger" (click)="confirmerSuppressionCreneau(c)">Supprimer</button>
               </td>
@@ -111,10 +116,53 @@
       <!-- Ajout/Maj créneau -->
       <div *ngIf="modeCreneau">
         <!-- formulaire selon type (unique/periodique) à implémenter dans le TS) -->
-        <app-formulaire-creneau [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()" (creneaux)="CreerPeriodique($event)"></app-formulaire-creneau>
+        <app-formulaire-creneau [gymnases]="gymnasesFiltres" [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()" (creneaux)="CreerPeriodique($event)"></app-formulaire-creneau>
       </div>
     </div>
+    <div *ngIf="activeTab === 'gymnases'">
+    
 
+      <div *ngIf="editgymnase === null">
+          <div class="buttons">
+        <button class="button is-primary" (click)="CreerGymnase()">Créer un gymnase</button>
+      </div>
+        <table class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of gymnasesFiltres">
+              <td>{{ c.nom }}</td>
+              <td>
+                <button class="button is-small is-info" (click)="ModifierNomGymnase(c)">Modifier</button>                
+              </td>
+              <td>
+                <button class="button is-small is-danger" (click)="SupprimerGymnase(c)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Ajout/Maj créneau -->
+      <div *ngIf="editgymnase">
+          <div class="buttons">
+        <button class="button is-danger" (click)="RetourGymnase()">Retour</button>
+      </div>
+        <!-- formulaire selon type (unique/periodique) à implémenter dans le TS) -->
+        <div class="field">
+          <label class="label">Nom du gymnase</label>
+          <div class="control">
+            <input class="input" [(ngModel)]="editgymnase.nom">
+          </div>
+      </div>
+                <button class="button is-small is-primary" (click)="ValiderGymnase()">Supprimer</button>
+    </div>
+    </div>
     <!-- ONGLET CALENDRIER -->
     <div *ngIf="activeTab === 'matchs'">
       <app-filtre-calendrier
@@ -142,7 +190,7 @@
             <td>{{ getEquipeNom(match.domicile) }}</td>
             <td>{{ getEquipeNom(match.exterieur) }}</td>
             <td>{{ getNomClub(match.club_recevant) }}</td>
-<td>{{ match.creneau?.gymnase || '—' }}</td>
+             <td>{{ getGymnase(match) }}</td>
             <td>{{ match.creneau_choisi == 0 ? "non" : "oui"}}</td>
           </tr>
         </tbody>

@@ -27,7 +27,14 @@ export class Creneau {
   heure_debut: string = ''; // format HH:mm:ss
   heure_fin: string = '';   // format HH:mm:ss
   club: number = 0;
-  gymnase: string = '';
+  gymnase: number = null;
+  notes: string = '';
+}
+
+export class Gymnase {
+  id: number = 0;
+  nom: string = '';
+  club: number = 0;
 }
 
 export class EquipeEngagee {

@@ -71,11 +71,24 @@
       <input type="time" class="input" [(ngModel)]="heureFin" />
     </div>
   </div>
+  <div class="field">
+    <label class="label">Notes</label>
+    <div class="control">
+      <input type="time" class="input" [(ngModel)]="notes" />
+    </div>
+  </div>
 
   <div class="field">
     <label class="label">Gymnase</label>
-    <div class="control">
-      <input type="text" class="input" [(ngModel)]="gymnase" />
+     <div class="control">
+        <div class="select is-fullwidth">
+      <select  [(ngModel)]="gymnase">
+        <ng-container *ngFor="let g of gymnases">
+          <option [value]="g.id">{{ g.nom }}</option>
+        </ng-container>
+        <option value="null">Aucun</option>
+      </select>
+      </div>
     </div>
   </div>
 

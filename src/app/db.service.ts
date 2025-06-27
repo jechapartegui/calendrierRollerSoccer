@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, Observable } from 'rxjs';
-import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from './class';
+import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Gymnase, Match } from './class';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -69,4 +69,12 @@ public selectedClub :number;
   createMatch(c: Match): Observable<any> { return this.create<Match>('match', c); }
   updateMatch(c: Match): Observable<any> { return this.update<Match>('match', c); }
   deleteMatch(id: number): Observable<any> { return this.delete('match', id); }
+
+  
+  // === GYMNASE ===
+  getGymnases(): Observable<Gymnase[]> { return this.getAll<Gymnase>('gymnase'); }
+  getOneGymnase(id: number): Observable<Gymnase> { return this.getOne<Gymnase>('gymnase', id); }
+  createGymnase(c: Gymnase): Observable<any> { return this.create<Gymnase>('gymnase', c); }
+  updateGymnase(c: Gymnase): Observable<any> { return this.update<Gymnase>('gymnase', c); }
+  deleteGymnase(id: number): Observable<any> { return this.delete('gymnase', id); }
 }

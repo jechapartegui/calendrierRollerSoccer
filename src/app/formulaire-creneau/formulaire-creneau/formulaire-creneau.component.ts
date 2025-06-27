@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Calendrier, Creneau } from 'src/app/class';
+import { Calendrier, Creneau, Gymnase } from 'src/app/class';
 import { firstValueFrom } from 'rxjs';
 import { DbService } from 'src/app/db.service';
 
@@ -7,11 +7,12 @@ export class CreneauPeriodique{
   jour = 'dimanche';
   heureDebut: string = '';
   heureFin: string = '';
-  gymnase: string = '';
+  gymnase: number = null;
   vacances: boolean = false;
   joursFeries: boolean = false;
   dateDebut:Date;
   dateFin:Date;
+  notes: string = '';
 }
 @Component({
   selector: 'app-formulaire-creneau',
@@ -20,6 +21,7 @@ export class CreneauPeriodique{
 })
 export class FormulaireCreneauComponent {
   @Input() mode: 'periodique' | 'unique' | null = null;
+  @Input() gymnases: Gymnase[] = [];
   @Output() cancel = new EventEmitter<void>();
   @Output() done = new EventEmitter<void>();
   @Output() creneaux = new EventEmitter<CreneauPeriodique>();
@@ -28,9 +30,10 @@ export class FormulaireCreneauComponent {
   jour = 'dimanche';
   heureDebut: string = '';
   heureFin: string = '';
-  gymnase: string = '';
+  gymnase: number = null;
   vacances: boolean = false;
   joursFeries: boolean = false;
+  notes: string = '';
 minDateStr = '2025-09-01';
 maxDateStr = '2026-05-31';
 
@@ -41,13 +44,13 @@ maxDateStr = '2026-05-31';
 
     if (this.mode === 'periodique') {
       const data =  new CreneauPeriodique();
-      data.gymnase = this.gymnase;
+      data.gymnase = null;
       data.dateDebut = new Date(this.minDateStr);
       data.dateFin = new Date(this.maxDateStr);
-
       data.heureDebut = this.heureDebut;
       data.heureFin = this.heureFin;
       data.jour = this.jour;
+         data.notes = this.notes;
       data.vacances = this.vacances;
       data.joursFeries = this.joursFeries;
       this.creneaux.emit(data);
@@ -56,14 +59,13 @@ maxDateStr = '2026-05-31';
     if (this.mode === 'unique') {
       const dateObj = new Date(this.date);
       dateObj.setHours(12, 0, 0, 0);
-      const creneau: Creneau = {
-        id:0,
-        date: dateObj,
-        heure_debut: this.heureDebut,
-        heure_fin: this.heureFin,
-        gymnase: this.gymnase,
-        club: club
-      };
+      const creneau: Creneau = new Creneau();
+     creneau.date = dateObj;
+         creneau.heure_debut = this.heureDebut;
+         creneau.heure_fin = this.heureFin;
+         creneau.gymnase = null;
+         creneau.notes = this.notes;
+         creneau.club = club;
       await firstValueFrom(this.db.createCreneau(creneau));
     }
 

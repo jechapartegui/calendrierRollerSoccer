@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Match } from 'src/app/class';
+import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Gymnase, Match } from 'src/app/class';
 import { DbService } from 'src/app/db.service';
 import { CreneauPeriodique } from 'src/app/formulaire-creneau/formulaire-creneau/formulaire-creneau.component';
 import { CreneauScore } from 'src/app/match-planning/match-planning.component';
@@ -32,7 +32,11 @@ export class MainComponent implements OnInit {
   categories: Categorie[] = [];
   clubs: Club[] = [];
   creneaux: Creneau[] = [];
+  editgymnase: Gymnase = null;
+  histogymnase:string = "";
   creneauxFiltres: Creneau[] = [];
+  gymnases: Gymnase[] = [];
+  gymnasesFiltres: Gymnase[] = [];
   matchs: MatchAvecCreneau[] = [];
   calendrierComplet: CalendrierComplet[];
   Calendrier:Calendrier[];
@@ -76,6 +80,9 @@ async chargerTout() {
     const dateB = b.date ? new Date(b.date).getTime() : Infinity;
     return dateA - dateB;
   });
+  this.gymnases = await firstValueFrom(this.db.getGymnases());
+  this.gymnasesFiltres = this.gymnases.filter(x => x.club == this.db.selectedClub);
+   this.gymnasesFiltres.sort((a,b) => a.nom > b.nom ? 1 : -1)
   const matchsBruts = await firstValueFrom(this.db.getMatchs());
 
   this.matchs = await this.enrichirEtTrierMatchs(matchsBruts);
@@ -207,7 +214,27 @@ isWeekend(date: Date): boolean {
 
   getGymnase(m: Match): string {
     const c = this.creneaux.find(c => c.id === m.creneau_choisi);
-    return c?.gymnase || '—';
+    if (!c) return '—';
+    if (c.gymnase) {
+      const gymnase = this.gymnases.find(g => g.id === c.gymnase);
+      return gymnase ? gymnase.nom : '—';
+    } else {
+      return "-"
+    }
+  }
+  getGymnaseList(id:number){
+        const gymnase = this.gymnases.find(g => g.id === id);
+      return gymnase ? gymnase.nom : '—';
+  }
+  updateCreneau(c:Creneau){
+    this.db.updateCreneau(c).subscribe({
+      next: () => {
+        console.log("Créneau mis à jour");
+      },
+      error: (err) => {
+        console.error("Erreur lors de la mise à jour du créneau", err);
+      }
+    });
   }
 
   getDateDuMatch(m: Match): string {
@@ -345,6 +372,7 @@ const creerCreneau = async () => {
     heure_fin: data.heureFin,
     club: this.db.selectedClub,
     gymnase: data.gymnase,
+    notes:'',
   };
  await firstValueFrom(this.db.createCreneau(nouveauCreneau));
 };
@@ -412,6 +440,12 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
     const jourPlus1 = this.calendrierComplet.find(x => this.sameDay(new Date(x.date), dateCreneauPlus1));
     const jourMoins1 = this.calendrierComplet.find(x => this.sameDay(new Date(x.date), dateCreneauMoins1));
 
+    jourCreneau.matchs.forEach((m) =>{
+      if(m.creneau_choisi == cr.id){
+        motifs.push("Match sur le créneau : " + this.getEquipeNom(m.domicile) + " - " + this.getEquipeNom(m.exterieur) + " " + this.getCategorieNom(m.categorie) )
+      }
+    })
+    
     // 1. Pas un week-end
     if (dateCreneau.getDay() !== 0 && dateCreneau.getDay() !== 6) {
       score += 4;
@@ -439,6 +473,7 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
         }
       });
     }
+    
 
     // 3. Calcul durée du créneau en minutes
     // Supposons que heure_debut et heure_fin sont en heures décimales (ex: 14.5 = 14h30)
@@ -518,6 +553,37 @@ timeStringToMinutes(timeStr: string): number {
   const [h, m, s] = timeStr.split(':').map(Number);
   return h * 60 + m + s / 60;
 }
+ModifierNomGymnase(c:Gymnase){
+  this.editgymnase = c;
+  this.histogymnase = JSON.stringify(c);
+}
+  RetourGymnase() {
+    this.editgymnase = null;
+    this.histogymnase = "";
+  }
 
+  async ValiderGymnase() {
+    if (this.histogymnase != JSON.stringify(this.editgymnase)) {
+      if (this.editgymnase.id > 0) {
+        await firstValueFrom(this.db.updateGymnase(this.editgymnase));
+      } else {
+        this.editgymnase.club = this.db.selectedClub;
+        await firstValueFrom(this.db.createGymnase(this.editgymnase));
+      }
+    }
+    this.editgymnase = null;
+    this.chargerTout();
+  }
+
+  CreerGymnase() {
+    this.editgymnase = { id: 0, nom: '', club: this.db.selectedClub };
+  }
+  SupprimerGymnase(c: Gymnase) {
+    if (window.confirm("Voulez-vous vraiment supprimer ce gymnase ?")) {
+      firstValueFrom(this.db.deleteGymnase(c.id)).then(() => {
+        this.chargerTout();
+      });
+    }
+  }
 
 }
