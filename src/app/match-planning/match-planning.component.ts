@@ -18,6 +18,7 @@ export interface CreneauScore extends Creneau {
 })
 export class MatchPlanningComponent implements OnInit {
 @Input() matchs: MatchAvecCreneau[] = []; // toutes les données originales
+  @Input() getGymnaseList!: (id: number) => string;
 matchsFiltres: MatchAvecCreneau[] = []; // résultat du filtrage (modifiable)
 @Input() categorie:Categorie[]=[];
  @Input()  creneaux: Creneau[] = [];
@@ -78,6 +79,8 @@ matchsFiltres: MatchAvecCreneau[] = []; // résultat du filtrage (modifiable)
     this.done.emit();
 
   }
+
+  
 
   async retirerCreneau() {
     if (!this.selectedMatch) return;

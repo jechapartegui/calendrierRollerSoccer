@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, map, Observable } from 'rxjs';
 import { Calendrier, Categorie, Club, Creneau, EquipeEngagee, Gymnase, Match } from './class';
 import { environment } from 'src/environments/environment';
+import { DatePipe } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class DbService {
 
   private apiUrl = environment.apiUrl;
 public selectedClub :number;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private datePipe: DatePipe) {}
 
   getListeClub(): Observable<Club[]> {
     return this.http.get<Club[]>(this.apiUrl + "/listeclub");
@@ -50,10 +51,33 @@ public selectedClub :number;
   deleteCategorie(id: number): Observable<any> { return this.delete('categorie', id); }
 
   // === CRENEAU ===
-  getCreneaux(): Observable<Creneau[]> { return this.getAll<Creneau>('creneau'); }
+  getCreneaux(): Observable<Creneau[]> {
+  return this.getAll<Creneau>('creneau').pipe(
+    map((arr: Creneau[]) =>
+      arr.map(c => ({
+        ...c,
+        date: new Date(c.date as unknown as string)
+      }))
+    )
+  );
+}
   getOneCreneau(id: number): Observable<Creneau> { return this.getOne<Creneau>('creneau', id); }
-  createCreneau(c: Creneau): Observable<any> { return this.create<Creneau>('creneau', c); }
-  updateCreneau(c: Creneau): Observable<any> { return this.update<Creneau>('creneau', c); }
+ private toPayload(c: Creneau): any {
+    return {
+      ...c,
+      date: this.datePipe.transform(c.date, 'yyyy-MM-dd')
+    };
+  }
+
+  createCreneau(c: Creneau): Observable<any> {
+    const payload = this.toPayload(c);
+    return this.create('creneau', payload);
+  }
+
+  updateCreneau(c: Creneau): Observable<any> {
+    const payload = this.toPayload(c);
+    return this.update('creneau', payload);
+  }
   deleteCreneau(id: number): Observable<any> { return this.delete('creneau', id); }
 
   // === EQUIPE ENGAGEE ===

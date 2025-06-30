@@ -12,6 +12,9 @@ import { MainComponent } from './main/main/main.component';
 import { FormulaireCreneauComponent } from './formulaire-creneau/formulaire-creneau/formulaire-creneau.component';
 import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier/filtre-calendrier.component';
 import { MatchPlanningComponent } from './match-planning/match-planning.component';
+import { DatePipe } from '@angular/common';
+import { FilterByDatePipe } from './filterDate.pipe';
+import { FilterByGymnasePipe } from './filterGymnase.pipe';
 
 @NgModule({
   declarations: [
@@ -19,13 +22,14 @@ import { MatchPlanningComponent } from './match-planning/match-planning.componen
     ClubComponent,
     MainComponent,
     FormulaireCreneauComponent,
-    FiltreCalendrierComponent, MatchPlanningComponent
+    FiltreCalendrierComponent, MatchPlanningComponent, FilterByDatePipe,
+    FilterByGymnasePipe,
   ],
   imports: [
     BrowserModule, HttpClientModule,
     AppRoutingModule, FormsModule
   ],
-  providers: [DbService],
+  providers: [DbService, DatePipe],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

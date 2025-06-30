@@ -79,7 +79,61 @@
         <button class="button is-primary" (click)="modeCreneau = 'periodique'">Créer un créneau périodique</button>
         <button class="button is-link" (click)="modeCreneau = 'unique'">Créer un créneau unique</button>
       </div>
+<!-- FILTRE -->
+<div class="box mb-4">
+  <div class="columns is-vcentered">
+    <!-- Date début -->
+    <div class="column is-one-quarter">
+      <label class="label">Date début</label>
+      <input
+        type="date"
+        class="input"
+        [(ngModel)]="filterDateDebut"
+        name="filterDateDebut"
+      />
+    </div>
 
+    <!-- Date fin -->
+    <div class="column is-one-quarter">
+      <label class="label">Date fin</label>
+      <input
+        type="date"
+        class="input"
+        [(ngModel)]="filterDateFin"
+        name="filterDateFin"
+      />
+    </div>
+
+    <!-- Gymnase -->
+    <div class="column is-one-quarter">
+      <label class="label">Gymnase</label>
+      <div class="select is-fullwidth">
+        <select
+          [(ngModel)]="filterGymnase"
+          name="filterGymnase"
+        >
+          <option [ngValue]="null">Tous</option>
+          <option
+            *ngFor="let g of gymnasesFiltres"
+            [ngValue]="g.id"
+          >
+            {{ g.nom }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Bouton Reset -->
+    <div class="column is-one-quarter">
+      <button
+        class="button is-light mt-4"
+        (click)="resetFilters()"
+      >
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+</div>
       <div *ngIf="modeCreneau === null">
         <table class="table is-fullwidth">
           <thead>
@@ -94,7 +148,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let c of creneauxFiltres">
+            <tr *ngFor="let c of creneauxFiltres
+          | filterByDate: filterDateDebut : filterDateFin
+          | filterByGymnase: filterGymnase">
               <td>{{ c.date | date: 'dd/MM/yyyy' }}</td>
               <td>{{ c.heure_debut }}</td>
               <td>{{ c.heure_fin }}</td>
@@ -116,7 +172,7 @@
       <!-- Ajout/Maj créneau -->
       <div *ngIf="modeCreneau">
         <!-- formulaire selon type (unique/periodique) à implémenter dans le TS) -->
-        <app-formulaire-creneau [gymnases]="gymnasesFiltres" [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()" (creneaux)="CreerPeriodique($event)"></app-formulaire-creneau>
+        <app-formulaire-creneau [liste_creneaux]="creneaux" [gymnases]="gymnasesFiltres" [mode]="modeCreneau" (cancel)="modeCreneau = null" (done)="rafraichirCreneaux()" (creneaux)="CreerPeriodique($event)"></app-formulaire-creneau>
       </div>
     </div>
     <div *ngIf="activeTab === 'gymnases'">
@@ -160,7 +216,7 @@
             <input class="input" [(ngModel)]="editgymnase.nom">
           </div>
       </div>
-                <button class="button is-small is-primary" (click)="ValiderGymnase()">Supprimer</button>
+                <button class="button is-small is-primary" (click)="ValiderGymnase()">Valider</button>
     </div>
     </div>
     <!-- ONGLET CALENDRIER -->
@@ -200,6 +256,8 @@
     <!-- ONGLET PLANIFICATION (placeholder) -->
     <div *ngIf="activeTab === 'planification'">
       <app-match-planning  
+      
+  [getGymnaseList]="getGymnaseList.bind(this)"
   [evaluerCreneau]="EvaluerCreneau.bind(this)" [creneaux]="creneaux" [categorie]="categories" [matchs]="matchs" [equipesEngagees]="equipesEngagees" (done)="rafraichirCreneaux()"></app-match-planning>
     </div>
     <div *ngIf="activeTab === 'calendrier'">

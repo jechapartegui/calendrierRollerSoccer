@@ -22,6 +22,7 @@ export class CreneauPeriodique{
 export class FormulaireCreneauComponent {
   @Input() mode: 'periodique' | 'unique' | null = null;
   @Input() gymnases: Gymnase[] = [];
+  @Input() liste_creneaux: Creneau[] = [];
   @Output() cancel = new EventEmitter<void>();
   @Output() done = new EventEmitter<void>();
   @Output() creneaux = new EventEmitter<CreneauPeriodique>();
@@ -44,7 +45,7 @@ maxDateStr = '2026-05-31';
 
     if (this.mode === 'periodique') {
       const data =  new CreneauPeriodique();
-      data.gymnase = null;
+      data.gymnase = this.gymnase;
       data.dateDebut = new Date(this.minDateStr);
       data.dateFin = new Date(this.maxDateStr);
       data.heureDebut = this.heureDebut;
@@ -59,11 +60,24 @@ maxDateStr = '2026-05-31';
     if (this.mode === 'unique') {
       const dateObj = new Date(this.date);
       dateObj.setHours(12, 0, 0, 0);
+      const dateStr = dateObj.toISOString().substring(0, 10);
+      const test2 = this.liste_creneaux.filter(c =>
+        new Date(c.date).toISOString().substring(0, 10) === dateStr && Number(c.club) === Number(club));
+   if (test2 && test2.length > 0) {
+    // 4) Alerte et confirmation
+    const confirmMsg = 
+      'Attention, vous avez déjà au moins un créneau ce jour-là pour ce club. Voulez-vous le (les) supprimer ?';
+    if (window.confirm(confirmMsg)) {
+      test2.forEach(async (c) => {
+        await firstValueFrom(this.db.delete('creneau', c.id));
+      });
+    }
+  }
       const creneau: Creneau = new Creneau();
      creneau.date = dateObj;
          creneau.heure_debut = this.heureDebut;
          creneau.heure_fin = this.heureFin;
-         creneau.gymnase = null;
+         creneau.gymnase = this.gymnase;
          creneau.notes = this.notes;
          creneau.club = club;
       await firstValueFrom(this.db.createCreneau(creneau));

@@ -74,7 +74,7 @@
   <div class="field">
     <label class="label">Notes</label>
     <div class="control">
-      <input type="time" class="input" [(ngModel)]="notes" />
+      <input type="text" class="input" [(ngModel)]="notes" />
     </div>
   </div>
 
@@ -86,7 +86,6 @@
         <ng-container *ngFor="let g of gymnases">
           <option [value]="g.id">{{ g.nom }}</option>
         </ng-container>
-        <option value="null">Aucun</option>
       </select>
       </div>
     </div>

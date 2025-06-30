@@ -216,17 +216,21 @@ isWeekend(date: Date): boolean {
     const c = this.creneaux.find(c => c.id === m.creneau_choisi);
     if (!c) return '—';
     if (c.gymnase) {
-      const gymnase = this.gymnases.find(g => g.id === c.gymnase);
+      const gymnase = this.gymnases.find(g => Number(g.id) === Number(c.gymnase));
       return gymnase ? gymnase.nom : '—';
     } else {
       return "-"
     }
   }
   getGymnaseList(id:number){
-        const gymnase = this.gymnases.find(g => g.id === id);
+        const gymnase = this.gymnases.find(g => Number(g.id) === Number(id));
       return gymnase ? gymnase.nom : '—';
   }
   updateCreneau(c:Creneau){
+    
+      const dateObj = new Date(c.date);
+      dateObj.setHours(12, 0, 0, 0);
+      c.date = dateObj;
     this.db.updateCreneau(c).subscribe({
       next: () => {
         console.log("Créneau mis à jour");
@@ -236,6 +240,18 @@ isWeekend(date: Date): boolean {
       }
     });
   }
+
+  // filtres
+filterDateDebut: string | null = null;
+filterDateFin:   string | null = null;
+filterGymnase:   number | null = null;
+
+// reset des filtres
+resetFilters() {
+  this.filterDateDebut = null;
+  this.filterDateFin   = null;
+  this.filterGymnase   = null;
+}
 
   getDateDuMatch(m: Match): string {
     const c = this.creneaux.find(c => c.id === m.creneau_choisi);
@@ -493,12 +509,22 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
         const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
 
         if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
-          score += 2;
-          motifs.push("Club domicile engagé dans un match le même jour");
+          if(mm.creneau_choisi != cr.id){
+          motifs.push("Club domicile engagé sur ce créneau");
+          } else {
+            
+          motifs.push("Club domicile engagé sur un autre créneau le même jour");
+          score += 4;
+          }
         }
         if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
-          score += 2;
-          motifs.push("Club extérieur engagé dans un match le même jour");
+         if(mm.creneau_choisi != cr.id){
+          motifs.push("Club extérieur engagé sur ce créneau");
+          } else {
+            
+          motifs.push("Club extérieur engagé sur un autre créneau le même jour");
+          score += 4;
+          }
         }
       });
     }
