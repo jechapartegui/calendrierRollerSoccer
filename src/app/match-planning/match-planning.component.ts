@@ -35,6 +35,11 @@ matchsFiltres: MatchAvecCreneau[] = []; // résultat du filtrage (modifiable)
     this.loadData();
   }
 
+  toggleRight() {
+   this.selectedMatch = undefined;
+    this.creneauxFiltres = [];
+  }
+
   loadData() {
     // charger les matchs, creneaux et équipes depuis le backend si besoin
     // ici simulé, donc ensuite filtrage

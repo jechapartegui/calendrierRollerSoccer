@@ -40,7 +40,7 @@ export class MainComponent implements OnInit {
   matchs: MatchAvecCreneau[] = [];
   calendrierComplet: CalendrierComplet[];
   Calendrier:Calendrier[];
-
+  showToutes:boolean = false;
   // Ajout équipe
   modeAjoutEquipe = false;
   nouvelleEquipe: EquipeEngagee = { id: 0, nom: '', categorie: 0, club:this.db.selectedClub};
@@ -61,10 +61,24 @@ export class MainComponent implements OnInit {
     await this.chargerTout();
   }
 
+  toggleVoirToutes() {
+    this.showToutes = !this.showToutes;
+    if (this.showToutes) {
+    }
+  }
+
 async chargerTout() {
   this.equipesEngagees = await firstValueFrom(this.db.getEquipes());
   this.equipesEngageesFiltres = this.equipesEngagees.filter(x => x.club == this.db.selectedClub);
-  this.categories = await firstValueFrom(this.db.getCategories());
+  this.categories = await firstValueFrom(this.db.getCategories());  
+  this.equipesEngagees = [...this.equipesEngagees]
+      .sort((a, b) => {
+        // d'abord sur la catégorie
+        if (this.getCategorieNom(a.categorie) < this.getCategorieNom(b.categorie)) return -1;
+        if (this.getCategorieNom(a.categorie) > this.getCategorieNom(b.categorie)) return 1;
+        // si même catégorie, trier sur le nom
+        return a.nom.localeCompare(b.nom);
+      });
   this.clubs = await firstValueFrom(this.db.getClubs());
   this.creneaux = await firstValueFrom(this.db.getCreneaux());
   this.Calendrier = await firstValueFrom(this.db.getCalendriers());
@@ -281,9 +295,8 @@ resetFilters() {
     // Supprimer l'équipe
 await firstValueFrom(this.db.deleteEquipe(e.id));
 
-    this.equipesEngagees = this.equipesEngagees.filter(eq => eq.id !== e.id);
-    this.matchs = await firstValueFrom(this.db.getMatchs());
-    this.matchsFiltres = [...this.matchs];
+    this.chargerTout();
+    window.alert("Équipe supprimée");
   }
 
   async genererMatchsPourCategorie(categorieId: number) {
@@ -374,6 +387,7 @@ let cc = this.calendrierComplet.find(x => this.sameDay(date, x.date))
     this.chargerTout();
   }
   CreerPeriodique(data:CreneauPeriodique){
+    let libelle_msg = "";
       const jourSemaine = this.convertirJourEnNumero(data.jour); // 0 = dimanche, 1 = lundi, etc.
   const dateCourante = new Date(data.dateDebut);
   const dateFin = new Date(data.dateFin);
@@ -388,13 +402,14 @@ const creerCreneau = async () => {
     heure_fin: data.heureFin,
     club: this.db.selectedClub,
     gymnase: data.gymnase,
-    notes:'',
+    notes:data.notes,
   };
  await firstValueFrom(this.db.createCreneau(nouveauCreneau));
 };
       // TODO: vérifier si la date est dans les vacances scolaires ou jour férié
       const estVacances = this.checksiVacances(new Date(dateCourante), this.clubs.find(x => x.id == this.db.selectedClub).pays); // à implémenter
       const estJourFerie = this.checksiFerie(new Date(dateCourante), this.clubs.find(x => x.id == this.db.selectedClub).pays);; // à implémenter
+      const estCreneauDate = this.creneaux.find(x => this.sameDay(new Date(x.date), dateCourante) && x.club == this.db.selectedClub);
       if(estVacances || estJourFerie){
         console.log(dateCourante)
       }
@@ -407,12 +422,17 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
 } else if (!estJourFerie && !estVacances) {
   creerCreneau();
 }
-
+if (estCreneauDate) {
+  libelle_msg += `Créneau déjà existant le ${dateCourante.toLocaleDateString()} - attention aux doublons\n`;
+}
      
     }
 
     // Passer au jour suivant
     dateCourante.setDate(dateCourante.getDate() + 1);
+  }
+  if(libelle_msg && libelle_msg.length > 0){
+    window.alert(libelle_msg);
   }
 }
 
@@ -471,22 +491,34 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
     // 2. Vacances et jours fériés
     if (jourCreneau?.evenements) {
       jourCreneau.evenements.forEach(ev => {
-        if (ev.type === "jour férié" && (ev.zone === paysDom || (ev.zone === 0 && paysDom !== 2))) {
+        if((ev.type === "jour férié" && (ev.zone === paysDom || (ev.zone === 0 && paysDom !== 2))) &&
+(ev.type === "jour férié" && (ev.zone === paysExt || (ev.zone === 0 && paysExt !== 2)))){
+  score += 6;
+      motifs.push("Jour férié pour les 2 équipes");
+        } else 
+        {if (ev.type === "jour férié" && (ev.zone === paysDom || (ev.zone === 0 && paysDom !== 2))) {
           score += 3;
       motifs.push("Jour férié équipe à domicile");
-        }
-        if (ev.type === "jour férié" && (ev.zone === paysExt || (ev.zone === 0 && paysExt !== 2))) {
+        } 
+         if  (ev.type === "jour férié" && (ev.zone === paysExt || (ev.zone === 0 && paysExt !== 2))) {
           score += 3;
       motifs.push("Jour férié équipe à l'extérieur");
         }
-        if (ev.type === "vacances" && ev.zone === paysDom) {
+      } 
+        if (ev.type === "vacances" && (ev.zone === paysDom || (ev.zone === 0 && paysDom !== 2)) &&
+(ev.type === "vacances" && (ev.zone === paysExt || (ev.zone === 0 && paysExt !== 2)))) {
+          score += 6;
+      motifs.push("Vacances pour les 2 équipes");
+} else {
+if (ev.type === "vacances" && ev.zone === paysDom) {
           score += 5;
       motifs.push("Vacances pour l'équipe à domicile");
-        }
-        if (ev.type === "vacances" && ev.zone === paysExt) {
+        } 
+         if  (ev.type === "vacances" && ev.zone === paysExt) {
           score += 5;
       motifs.push("Vacances pour l'équipe à l'extérieur");
         }
+      }
       });
     }
     
@@ -507,8 +539,16 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
 
         const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
         const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
-
-        if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
+        if((clubDomMatch === clubDom || clubExtMatch === clubDom) && (clubDomMatch === clubExt || clubExtMatch === clubExt)){
+          if(mm.creneau_choisi != cr.id){
+          motifs.push("Les 2 clubs sont engagés sur ce créneau");
+          } else {
+            
+          motifs.push("Les 2 clubs sont engagés sur un autre créneau le même jour");
+          score += 8;
+          }
+        } else 
+        { if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
           if(mm.creneau_choisi != cr.id){
           motifs.push("Club domicile engagé sur ce créneau");
           } else {
@@ -516,8 +556,8 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
           motifs.push("Club domicile engagé sur un autre créneau le même jour");
           score += 4;
           }
-        }
-        if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
+        } 
+         if (clubDomMatch === clubExt || clubExtMatch === clubExt) {
          if(mm.creneau_choisi != cr.id){
           motifs.push("Club extérieur engagé sur ce créneau");
           } else {
@@ -526,6 +566,7 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
           score += 4;
           }
         }
+      }
       });
     }
 
@@ -534,8 +575,11 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
       jourMoins1.matchs.forEach(mm => {
         const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
         const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
-
-        if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
+if( (clubDomMatch === clubDom || clubExtMatch === clubDom) && (clubDomMatch === clubExt || clubExtMatch === clubExt) ) {
+          score += 1;
+          motifs.push("Les deux clubs sont engagés dans un match la veille");
+        } else {
+          if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
           score += 1;
           motifs.push("Club domicile engagé dans un match la veille");
         }
@@ -543,6 +587,7 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
           score += 1;
           motifs.push("Club extérieur engagé dans un match la veille");
         }
+      }
       });
     }
 
@@ -551,6 +596,10 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
       jourPlus1.matchs.forEach(mm => {
         const clubDomMatch = this.equipesEngagees.find(y => y.id === mm.domicile)?.club;
         const clubExtMatch = this.equipesEngagees.find(y => y.id === mm.exterieur)?.club;
+if((clubDomMatch === clubDom || clubExtMatch === clubDom) && (clubDomMatch === clubExt || clubExtMatch === clubExt)){
+    score += 2;
+          motifs.push("Les 2 clubs sont engagés dans un match le lendemain");
+} else {
 
         if (clubDomMatch === clubDom || clubExtMatch === clubDom) {
           score += 1;
@@ -560,6 +609,7 @@ if (estJourFerie && estVacances && data.joursFeries && data.vacances) {
           score += 1;
           motifs.push("Club extérieur engagé dans un match le lendemain");
         }
+      }
       });
     }
 

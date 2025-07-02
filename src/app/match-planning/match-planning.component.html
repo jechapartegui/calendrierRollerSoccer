@@ -1,12 +1,15 @@
-<div class="columns">
-  <div class="column is-half">
-    <h2 class="title is-4">Matchs à planifier</h2>
+<div class="layout-container">
+  <!-- Partie gauche (planning) -->
+  <section *ngIf="!selectedMatch"
+    class="panel panel-left"
+  >
+    <h2 class="title is-4 panel-header">Matchs à planifier</h2>
     <div class="field">
       <label class="checkbox">
         <input type="checkbox" [(ngModel)]="filtreSansCreneau" (change)="loadData()"> Matchs sans créneau uniquement
       </label>
     </div>
-    <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
+    <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
       <thead>
         <tr><th>Catégorie</th><th>Rencontre</th><th>Action</th></tr>
       </thead>
@@ -21,16 +24,22 @@
         </tr>
       </tbody>
     </table>
-  </div>
-
-  <div class="column is-half" *ngIf="selectedMatch">
-    <h2 class="title is-4">Planification du match</h2>
+    </section>
+   <section *ngIf="selectedMatch"
+    class="panel panel-right"
+  >
+    <button
+      class="button is-link is-small btn-toggle"
+      (click)="toggleRight()"
+    >Retour
+    </button>
+    <h2 class="title is-4 panel-header">Planification du match</h2>
       <h3 class="title is-5 is-primary">&nbsp;{{ getCategorieNom(selectedMatch.categorie) }}&nbsp;{{ getEquipeNom(selectedMatch.domicile) }} - {{ getEquipeNom(selectedMatch.exterieur) }}</h3>
     <button *ngIf="selectedMatch.creneau_choisi" class="button is-danger mb-3" (click)="retirerCreneau()">Retirer le créneau</button>
 
     <div class="mb-5">
       <h3 class="subtitle is-5 is-primary">Créneaux recommandés</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
         <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
         <tbody>
           <tr *ngFor="let c of creneauxRecommandes">
@@ -66,13 +75,24 @@
 
     <div class="mb-5">
       <h3 class="subtitle is-5 is-warning">Créneaux acceptables</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
-        <thead><tr><th>Date</th><th>Heure</th><th>Motif</th><th>Gymnase</th><th></th></tr></thead>
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
+        <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
         <tbody>
           <tr *ngFor="let c of creneauxNonRecommandes">
   <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
   <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
-  <td [innerHTML]="c.motif"></td>
+  <td>
+  <!-- ton motif (liste UL) -->
+  <div [innerHTML]="c.motif"></div>
+
+  <!-- tes notes (si présentes) -->
+  <p
+    *ngIf="c.notes && c.notes.length > 0"
+    class="has-text-grey is-italic"
+  >
+    {{ c.notes }}
+  </p>
+</td>
   <td>{{ getGymnaseList(c.gymnase) }}</td>
   <td class="is-flex is-align-items-center">
     <!-- Bouton Valider -->
@@ -80,26 +100,6 @@
       Valider
     </button>
 
-    <!-- Icône d'info, seulement si c.notes existe et n'est pas vide -->
-    <span
-  *ngIf="c.notes && c.notes.length > 0"
-  title="{{ c.notes }}"
-  class="ml-2"
-  style="
-    background-color: #209cee;
-    color: #fff;
-    border-radius: 50%;
-    width: 1.25em;
-    height: 1.25em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85em;
-    cursor: help;
-  "
->
-  ℹ️
-</span>
   </td>
 </tr>
 
@@ -109,13 +109,25 @@
 
     <div>
       <h3 class="subtitle is-5 is-danger">Créneaux déconseillés</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-7">
-        <thead><tr><th>Date</th><th>Heure</th><th>Motif</th><th>Gymnase</th><th></th></tr></thead>
+      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
+        <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
         <tbody>
            <tr *ngFor="let c of creneauxDeconseilles">
   <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
   <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
-  <td [innerHTML]="c.motif"></td>
+  
+  <td>
+  <!-- ton motif (liste UL) -->
+  <div [innerHTML]="c.motif"></div>
+
+  <!-- tes notes (si présentes) -->
+  <p
+    *ngIf="c.notes && c.notes.length > 0"
+    class="has-text-grey is-italic"
+  >
+    {{ c.notes }}
+  </p>
+</td>
   <td>{{ getGymnaseList(c.gymnase) }}</td>
   <td class="is-flex is-align-items-center">
     <!-- Bouton Valider -->
@@ -123,31 +135,11 @@
       Valider
     </button>
 
-    <!-- Icône d'info, seulement si c.notes existe et n'est pas vide -->
-    <span
-  *ngIf="c.notes && c.notes.length > 0"
-  title="{{ c.notes }}"
-  class="ml-2"
-  style="
-    background-color: #209cee;
-    color: #fff;
-    border-radius: 50%;
-    width: 1.25em;
-    height: 1.25em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85em;
-    cursor: help;
-  "
->
-  ℹ️
-</span>
   </td>
 </tr>
 
         </tbody>
       </table>
     </div>
-  </div>
+   </section>
 </div>
