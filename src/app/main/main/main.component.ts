@@ -281,9 +281,12 @@ resetFilters() {
     this.equipesEngageesFiltres = this.equipesEngagees.filter(x => x.club== this.db.selectedClub);
     this.nouvelleEquipe = { id: 0, nom: '', categorie: 0, club:this.db.selectedClub };
     this.modeAjoutEquipe = false;
-    await this.genererMatchsPourCategorie(cat);
+    if(this.categories.find(x => x.id == cat) && this.categories.find(x => x.id == cat).nom != "CDF"){
+  await this.genererMatchsPourCategorie(cat);
     this.matchs = await firstValueFrom(this.db.getMatchs());
     this.matchsFiltres = [...this.matchs];
+    }
+  
   }
 
   async supprimerEquipe(e: EquipeEngagee) {
