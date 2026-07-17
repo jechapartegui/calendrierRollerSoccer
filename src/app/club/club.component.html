@@ -1,0 +1,214 @@
+<section class="club-page">
+
+  <div class="club-background club-background-one"></div>
+  <div class="club-background club-background-two"></div>
+
+  <div class="club-layout">
+
+    <section class="club-presentation">
+
+      <div class="brand">
+        <div class="brand-logo">
+          PTD
+        </div>
+
+        <div>
+          <div class="brand-name">Pose Ta Date</div>
+          <div class="brand-version">Saison RollerSoccer 2026-2027</div>
+        </div>
+      </div>
+
+      <div class="presentation-content">
+        <span class="presentation-badge">
+          Organisation des rencontres
+        </span>
+
+        <h1>
+          Construisons ensemble<br>
+          le calendrier de la saison.
+        </h1>
+
+        <p>
+          Sélectionne ton club et la saison concernée pour accéder
+          aux équipes, aux créneaux, aux rencontres et aux indisponibilités.
+        </p>
+
+        <div class="presentation-features">
+          <div class="feature">
+            <span class="feature-icon">✓</span>
+            <span>Gestion centralisée des créneaux</span>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">✓</span>
+            <span>Organisation des rencontres</span>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">✓</span>
+            <span>Vue complète de la saison</span>
+          </div>
+
+          <div class="feature">
+            <span class="feature-icon">✓</span>
+            <span>Gestion des contraintes et des indisponibilités</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="presentation-footer">
+        Pose Ta Date · Calendrier sportif collaboratif
+      </div>
+
+    </section>
+
+    <section class="connection-card">
+
+      <div class="connection-heading">
+        <span class="connection-eyebrow">Espace club</span>
+        <h2>Bienvenue</h2>
+
+        <p>
+          Connecte-toi pour accéder à l’espace de préparation
+          de ton club.
+        </p>
+      </div>
+
+      <div
+        *ngIf="loading"
+        class="loading-container"
+      >
+        <span class="loading-spinner"></span>
+        <span>Chargement des clubs et des saisons...</span>
+      </div>
+
+      <ng-container *ngIf="!loading">
+
+        <div
+          *ngIf="errorMessage"
+          class="error-message"
+          role="alert"
+        >
+          <span class="error-icon">!</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="club">
+            Club
+          </label>
+
+          <div class="select-wrapper">
+            <select
+              id="club"
+              name="club"
+              [(ngModel)]="selectedClubId"
+              [disabled]="connecting"
+            >
+              <option [ngValue]="null">
+                Sélectionner un club
+              </option>
+
+              <option
+                *ngFor="let club of clubs"
+                [ngValue]="club.id"
+              >
+                {{ club.nom }}
+              </option>
+            </select>
+
+            <span class="select-arrow">⌄</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="saison">
+            Saison
+          </label>
+
+          <div class="select-wrapper">
+            <select
+              id="saison"
+              name="saison"
+              [(ngModel)]="selectedSaisonId"
+              [disabled]="connecting"
+            >
+              <option [ngValue]="null">
+                Sélectionner une saison
+              </option>
+
+              <option
+                *ngFor="let saison of saisons"
+                [ngValue]="saison.id"
+              >
+                {{ getSaisonLabel(saison) }}
+              </option>
+            </select>
+
+            <span class="select-arrow">⌄</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="clubCode">
+            Code du club
+          </label>
+
+          <div class="code-wrapper">
+            <input
+              id="clubCode"
+              name="clubCode"
+              [type]="showCode ? 'text' : 'password'"
+              [(ngModel)]="clubCode"
+              [disabled]="connecting"
+              placeholder="Saisir le code d’accès"
+              autocomplete="off"
+              (keyup.enter)="seConnecter()"
+            >
+
+            <button
+              type="button"
+              class="show-code-button"
+              tabindex="-1"
+              (click)="toggleCodeVisibility()"
+              [attr.aria-label]="showCode ? 'Masquer le code' : 'Afficher le code'"
+            >
+              {{ showCode ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="connection-button"
+          [disabled]="!formulaireValide"
+          (click)="seConnecter()"
+        >
+          <span
+            *ngIf="connecting"
+            class="button-spinner"
+          ></span>
+
+          <span>
+            {{ connecting ? 'Chargement des données...' : 'Accéder à mon espace' }}
+          </span>
+
+          <span
+            *ngIf="!connecting"
+            class="button-arrow"
+          >
+            →
+          </span>
+        </button>
+
+        <div class="connection-help">
+          Le code d’accès est l'identifiant unique de ton club au sein de la FFRS.
+        </div>
+
+      </ng-container>
+
+    </section>
+
+  </div>
+
+</section>

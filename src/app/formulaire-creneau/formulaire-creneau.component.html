@@ -1,0 +1,443 @@
+<div
+  *ngIf="mode"
+  class="creneau-editor"
+>
+
+  <header class="editor-header">
+
+    <div>
+      <span class="editor-eyebrow">
+        Disponibilité sportive
+      </span>
+
+      <h3>
+        {{
+          mode === 'periodique'
+            ? 'Créer des créneaux périodiques'
+            : 'Créer un créneau'
+        }}
+      </h3>
+
+      <p>
+        {{
+          mode === 'periodique'
+            ? 'Le créneau sera généré chaque semaine sur la période choisie.'
+            : 'Proposez une date aux autres clubs pour organiser une ou plusieurs rencontres.'
+        }}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="close-button"
+      aria-label="Fermer"
+      (click)="annuler()"
+    >
+      ×
+    </button>
+
+  </header>
+
+  <div class="editor-layout">
+
+    <section class="editor-form">
+
+      <!-- DATE UNIQUE -->
+
+      <div
+        *ngIf="mode === 'unique'"
+        class="form-field"
+      >
+        <label for="creneauDate">
+          Date du créneau
+        </label>
+
+        <input
+          id="creneauDate"
+          type="date"
+          class="modern-input"
+          [min]="minDateStr"
+          [max]="maxDateStr"
+          [(ngModel)]="dateStr"
+        >
+
+        <span
+          *ngIf="dateSelectionneeLibelle"
+          class="field-help"
+        >
+          {{ dateSelectionneeLibelle }}
+        </span>
+      </div>
+
+      <!-- PÉRIODIQUE -->
+
+      <ng-container
+        *ngIf="mode === 'periodique'"
+      >
+
+        <div class="form-field">
+          <label for="creneauJour">
+            Jour de la semaine
+          </label>
+
+          <select
+            id="creneauJour"
+            class="modern-input"
+            [(ngModel)]="jour"
+          >
+            <option value="lundi">
+              Lundi
+            </option>
+
+            <option value="mardi">
+              Mardi
+            </option>
+
+            <option value="mercredi">
+              Mercredi
+            </option>
+
+            <option value="jeudi">
+              Jeudi
+            </option>
+
+            <option value="vendredi">
+              Vendredi
+            </option>
+
+            <option value="samedi">
+              Samedi
+            </option>
+
+            <option value="dimanche">
+              Dimanche
+            </option>
+          </select>
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-field">
+            <label for="dateDebut">
+              Date de début
+            </label>
+
+            <input
+              id="dateDebut"
+              type="date"
+              class="modern-input"
+              [(ngModel)]="minDateStr"
+            >
+          </div>
+
+          <div class="form-field">
+            <label for="dateFin">
+              Date de fin
+            </label>
+
+            <input
+              id="dateFin"
+              type="date"
+              class="modern-input"
+              [(ngModel)]="maxDateStr"
+            >
+          </div>
+
+        </div>
+
+      </ng-container>
+
+      <!-- HORAIRES -->
+
+      <div class="form-grid">
+
+        <div class="form-field">
+          <label for="heureDebut">
+            Heure de début
+          </label>
+
+          <input
+            id="heureDebut"
+            type="time"
+            class="modern-input"
+            [(ngModel)]="heureDebut"
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="heureFin">
+            Heure de fin
+          </label>
+
+          <input
+            id="heureFin"
+            type="time"
+            class="modern-input"
+            [(ngModel)]="heureFin"
+          >
+        </div>
+
+      </div>
+
+      <!-- GYMNASE -->
+
+      <div class="form-field">
+        <label for="gymnase">
+          Gymnase
+        </label>
+
+        <select
+          id="gymnase"
+          class="modern-input"
+          [(ngModel)]="gymnase"
+        >
+          <option
+            [ngValue]="null"
+          >
+            Sélectionner un gymnase
+          </option>
+
+          <option
+            *ngFor="let g of gymnases"
+            [ngValue]="g.id"
+          >
+            {{ g.nom }}
+          </option>
+        </select>
+      </div>
+
+      <!-- OPTIONS -->
+
+      <div class="options-grid">
+
+        <label class="option-card">
+          <input
+            type="checkbox"
+            [(ngModel)]="creneau_confirme"
+          >
+
+          <span class="option-control"></span>
+
+          <span class="option-copy">
+            <strong>
+              Date confirmée
+            </strong>
+
+            <small>
+              Le gymnase et la date sont définitivement disponibles.
+            </small>
+          </span>
+        </label>
+
+        <label class="option-card">
+          <input
+            type="checkbox"
+            [(ngModel)]="un_club"
+          >
+
+          <span class="option-control"></span>
+
+          <span class="option-copy">
+            <strong>
+              Un seul club visiteur
+            </strong>
+
+            <small>
+              Une fois un club positionné, le créneau ne sera plus proposé aux autres clubs.
+            </small>
+          </span>
+        </label>
+
+      </div>
+
+      <!-- OPTIONS PÉRIODIQUES -->
+
+      <div
+        *ngIf="mode === 'periodique'"
+        class="periodic-options"
+      >
+
+        <label class="simple-checkbox">
+          <input
+            type="checkbox"
+            [(ngModel)]="vacances"
+          >
+
+          Maintenir les créneaux pendant les vacances
+        </label>
+
+        <label class="simple-checkbox">
+          <input
+            type="checkbox"
+            [(ngModel)]="joursFeries"
+          >
+
+          Maintenir les créneaux pendant les jours fériés
+        </label>
+
+      </div>
+
+      <!-- NOTES -->
+
+      <div class="form-field">
+        <label for="notes">
+          Informations complémentaires
+        </label>
+
+        <textarea
+          id="notes"
+          class="modern-textarea"
+          rows="4"
+          [(ngModel)]="notes"
+          placeholder="Accès au gymnase, contraintes horaires, nombre de matchs possibles…"
+        ></textarea>
+      </div>
+
+      <div
+        *ngIf="errorMessage"
+        class="form-error"
+      >
+        <span>!</span>
+        {{ errorMessage }}
+      </div>
+
+      <div class="editor-actions">
+
+        <button
+          type="button"
+          class="secondary-button"
+          [disabled]="saving"
+          (click)="annuler()"
+        >
+          Annuler
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="saving"
+          (click)="valider()"
+        >
+          {{
+            saving
+              ? 'Création…'
+              : (
+                  mode === 'periodique'
+                    ? 'Créer les créneaux'
+                    : 'Créer le créneau'
+                )
+          }}
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- PANEL DATE -->
+
+    <aside
+      *ngIf="mode === 'unique'"
+      class="date-panel"
+    >
+
+      <div class="date-panel-header">
+        <span class="panel-symbol">
+          IN
+        </span>
+
+        <div>
+          <strong>
+            Contraintes connues
+          </strong>
+
+          <small>
+            {{
+              dateSelectionneeLibelle ||
+              'Sélectionnez une date'
+            }}
+          </small>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!dateSelectionnee"
+        class="panel-empty"
+      >
+        <p>
+          Choisissez une date pour connaître les vacances,
+          jours fériés, indisponibilités et matchs déjà programmés.
+        </p>
+      </div>
+
+      <div
+        *ngIf="
+          dateSelectionnee &&
+          contraintesDateSelectionnee.length === 0
+        "
+        class="panel-success"
+      >
+        <span>✓</span>
+
+        <div>
+          <strong>
+            Aucune contrainte connue
+          </strong>
+
+          <p>
+            Rien n’empêche actuellement de proposer un créneau à cette date.
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngIf="
+          contraintesDateSelectionnee.length > 0
+        "
+        class="constraints-list"
+      >
+
+        <article
+          *ngFor="
+            let contrainte of contraintesDateSelectionnee
+          "
+          class="constraint-card"
+          [class.is-info]="
+            contrainte.niveau === 'info'
+          "
+          [class.is-warning]="
+            contrainte.niveau === 'warning'
+          "
+          [class.is-danger]="
+            contrainte.niveau === 'danger'
+          "
+        >
+          <span class="constraint-indicator"></span>
+
+          <div>
+            <strong>
+              {{ contrainte.titre }}
+            </strong>
+
+            <p>
+              {{ contrainte.description }}
+            </p>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="panel-help">
+        <strong>
+          À savoir
+        </strong>
+
+        <p>
+          Ces informations sont indicatives. Elles n’interdisent pas la création du créneau, mais permettent d’éviter les dates manifestement compliquées.
+        </p>
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>

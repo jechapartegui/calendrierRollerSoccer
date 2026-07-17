@@ -1,0 +1,2470 @@
+<div class="ptd-app">
+
+  <header class="app-header">
+
+    <div class="header-brand">
+      <div class="brand-symbol">
+        PTD
+      </div>
+
+      <div class="brand-copy">
+        <span class="brand-title">
+          Pose Ta Date
+        </span>
+
+        <span class="brand-subtitle">
+          Organisation de la saison sportive
+        </span>
+      </div>
+    </div>
+
+    <div class="header-context">
+
+      <div class="context-item">
+        <span class="context-label">
+          Club
+        </span>
+
+        <strong>
+          {{ selectedClubNom }}
+        </strong>
+      </div>
+
+      <div class="context-divider"></div>
+
+      <div class="context-item">
+        <span class="context-label">
+          Saison
+        </span>
+
+        <strong>
+          {{ selectedSaisonNom }}
+        </strong>
+      </div>
+
+      <button
+        type="button"
+        class="change-club-button"
+        (click)="changerClub()"
+      >
+        Changer
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="app-main">
+
+    <section class="dashboard-hero">
+
+      <div class="hero-copy">
+        <span class="hero-eyebrow">
+          Tableau de bord
+        </span>
+
+        <h1>
+          Bonjour {{ selectedClubNom }}
+        </h1>
+
+        <p>
+          Préparez les équipes, proposez vos créneaux
+          et planifiez les rencontres de la saison
+          {{ selectedSaisonNom }}.
+        </p>
+      </div>
+
+      <div class="hero-progress">
+
+        <div class="progress-summary">
+          <span>
+            Matchs planifiés
+          </span>
+
+          <strong>
+            {{ matchsPlanifies }}
+            /
+            {{ matchs.length }}
+          </strong>
+        </div>
+
+        <div class="progress-track">
+          <div
+            class="progress-value"
+            [style.width.%]="
+              matchs.length
+                ? (matchsPlanifies / matchs.length) * 100
+                : 0
+            "
+          ></div>
+        </div>
+
+        <small>
+          {{ matchsNonPlanifies }}
+          rencontre(s) restent à organiser
+        </small>
+
+      </div>
+
+    </section>
+
+    <section class="stats-grid">
+
+      <article class="stat-card">
+        <div class="stat-icon">
+          EQ
+        </div>
+
+        <div>
+          <span>Mes équipes</span>
+          <strong>
+            {{ equipesEngageesFiltres.length }}
+          </strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">
+          CR
+        </div>
+
+        <div>
+          <span>Mes créneaux</span>
+          <strong>
+            {{ creneauxFiltres.length }}
+          </strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">
+          CP
+        </div>
+
+        <div>
+          <span>Propositions reçues</span>
+          <strong>
+            {{ creneauxProposes.length }}
+          </strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">
+          MA
+        </div>
+
+        <div>
+          <span>Matchs à planifier</span>
+          <strong>
+            {{ matchsNonPlanifies }}
+          </strong>
+        </div>
+      </article>
+
+    </section>
+
+    <div
+      *ngIf="errorMessage"
+      class="app-alert"
+    >
+      <span class="alert-symbol">
+        !
+      </span>
+
+      <div>
+        <strong>
+          Une erreur est survenue
+        </strong>
+
+        <p>
+          {{ errorMessage }}
+        </p>
+      </div>
+    </div>
+
+    <section class="workspace">
+
+      <nav
+        class="workspace-nav"
+        aria-label="Navigation principale"
+      >
+        <button
+          *ngFor="let tab of tabs"
+          type="button"
+          class="workspace-tab"
+          [class.is-active]="activeTab === tab.id"
+          (click)="setActiveTab(tab.id)"
+        >
+          <span class="workspace-tab-icon">
+            {{ tab.icon }}
+          </span>
+
+          <span class="workspace-tab-copy">
+            <strong>
+              {{ tab.shortLabel }}
+            </strong>
+
+            <small>
+              {{ tab.description }}
+            </small>
+          </span>
+
+          <span
+            *ngIf="getTabCount(tab.id) !== null"
+            class="workspace-tab-count"
+          >
+            {{ getTabCount(tab.id) }}
+          </span>
+        </button>
+      </nav>
+
+      <section class="workspace-content">
+
+        <header class="content-header">
+
+          <div>
+            <span class="content-eyebrow">
+              {{ activeTabConfig.shortLabel }}
+            </span>
+
+            <h2>
+              {{ activeTabConfig.label }}
+            </h2>
+
+            <p>
+              {{ activeTabConfig.description }}
+            </p>
+          </div>
+
+          <div
+            *ngIf="loading"
+            class="content-loading"
+          >
+            <span class="spinner"></span>
+            Actualisation…
+          </div>
+
+        </header>
+
+        <!-- ÉQUIPES -->
+
+        <div
+          *ngIf="activeTab === 'equipes'"
+          class="tab-content"
+        >
+
+          <div class="action-bar">
+
+            <div>
+              <strong>
+                Équipes engagées par mon club
+              </strong>
+
+              <span>
+                {{ equipesEngageesFiltres.length }}
+                équipe(s)
+              </span>
+            </div>
+
+            <button
+              *ngIf="!modeAjoutEquipe"
+              type="button"
+              class="primary-button"
+              (click)="modeAjoutEquipe = true"
+            >
+              <span>+</span>
+              Ajouter une équipe
+            </button>
+
+          </div>
+
+          <div
+            *ngIf="modeAjoutEquipe"
+            class="editor-card"
+          >
+            <div class="editor-heading">
+              <div>
+                <span class="content-eyebrow">
+                  Nouvelle inscription
+                </span>
+
+                <h3>
+                  Ajouter une équipe
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="icon-button"
+                (click)="modeAjoutEquipe = false"
+                aria-label="Fermer"
+              >
+                ×
+              </button>
+            </div>
+
+            <div class="form-grid">
+
+              <div class="form-field">
+                <label for="equipeNom">
+                  Nom de l’équipe
+                </label>
+
+                <input
+                  id="equipeNom"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleEquipe.nom"
+                  placeholder="Ex. Ivry Roller Seniors"
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="equipeCategorie">
+                  Catégorie
+                </label>
+
+                <select
+                  id="equipeCategorie"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleEquipe.categorie"
+                >
+                  <option [ngValue]="0">
+                    Sélectionner une catégorie
+                  </option>
+
+                  <option
+                    *ngFor="let categorie of categories"
+                    [ngValue]="categorie.id"
+                  >
+                    {{ categorie.nom }}
+                  </option>
+                </select>
+              </div>
+
+            </div>
+
+            <div class="editor-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="modeAjoutEquipe = false"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="creerEquipe()"
+              >
+                Créer l’équipe
+              </button>
+            </div>
+          </div>
+
+          <div class="table-card">
+
+            <div
+              *ngIf="equipesEngageesFiltres.length === 0"
+              class="empty-state"
+            >
+              <div class="empty-symbol">
+                EQ
+              </div>
+
+              <h3>
+                Aucune équipe engagée
+              </h3>
+
+              <p>
+                Ajoutez votre première équipe pour
+                commencer à générer les rencontres.
+              </p>
+            </div>
+
+            <div
+              *ngIf="equipesEngageesFiltres.length > 0"
+              class="table-scroll"
+            >
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Équipe</th>
+                    <th>Catégorie</th>
+                    <th class="action-column">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let equipe of equipesEngageesFiltres;
+                      trackBy: trackById
+                    "
+                  >
+                    <td>
+                      <div class="entity-cell">
+                        <span class="entity-avatar">
+                          {{
+                            equipe.nom
+                              .substring(0, 2)
+                              .toUpperCase()
+                          }}
+                        </span>
+
+                        <strong>
+                          {{ equipe.nom }}
+                        </strong>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span class="category-badge">
+                        {{
+                          getCategorieNom(
+                            equipe.categorie
+                          )
+                        }}
+                      </span>
+                    </td>
+
+                    <td class="action-column">
+                      <button
+                        type="button"
+                        class="danger-link"
+                        (click)="supprimerEquipe(equipe)"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="text-button"
+            (click)="toggleVoirToutes()"
+          >
+            {{
+              showToutes
+                ? 'Masquer toutes les équipes'
+                : 'Voir toutes les équipes engagées'
+            }}
+          </button>
+
+          <div
+            *ngIf="showToutes"
+            class="table-card secondary-table"
+          >
+            <div class="table-scroll">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Club</th>
+                    <th>Équipe</th>
+                    <th>Catégorie</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let equipe of equipesEngagees;
+                      trackBy: trackById
+                    "
+                  >
+                    <td>
+                      {{
+                        getNomClub(
+                          equipe.club
+                        )
+                      }}
+                    </td>
+
+                    <td>
+                      <strong>
+                        {{ equipe.nom }}
+                      </strong>
+                    </td>
+
+                    <td>
+                      {{
+                        getCategorieNom(
+                          equipe.categorie
+                        )
+                      }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- GYMNASES -->
+
+        <div
+          *ngIf="activeTab === 'gymnases'"
+          class="tab-content"
+        >
+
+          <div
+            *ngIf="editgymnase === null"
+          >
+            <div class="action-bar">
+              <div>
+                <strong>
+                  Lieux de réception
+                </strong>
+
+                <span>
+                  {{ gymnasesFiltres.length }}
+                  gymnase(s)
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="CreerGymnase()"
+              >
+                <span>+</span>
+                Créer un gymnase
+              </button>
+            </div>
+
+            <div class="cards-list">
+
+              <article
+                *ngFor="
+                  let gymnase of gymnasesFiltres;
+                  trackBy: trackById
+                "
+                class="location-card"
+              >
+                <div class="location-icon">
+                  GY
+                </div>
+
+                <div class="location-copy">
+                  <strong>
+                    {{ gymnase.nom }}
+                  </strong>
+
+                  <span>
+                    {{ selectedClubNom }}
+                  </span>
+                </div>
+
+                <div class="location-actions">
+                  <button
+                    type="button"
+                    class="secondary-button compact"
+                    (click)="ModifierNomGymnase(gymnase)"
+                  >
+                    Modifier
+                  </button>
+
+                  <button
+                    type="button"
+                    class="danger-link"
+                    (click)="SupprimerGymnase(gymnase)"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </article>
+
+              <div
+                *ngIf="gymnasesFiltres.length === 0"
+                class="empty-state table-card"
+              >
+                <div class="empty-symbol">
+                  GY
+                </div>
+
+                <h3>
+                  Aucun gymnase renseigné
+                </h3>
+
+                <p>
+                  Créez les lieux utilisés pour vos
+                  créneaux de réception.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <div
+            *ngIf="editgymnase"
+            class="editor-card"
+          >
+            <div class="editor-heading">
+              <div>
+                <span class="content-eyebrow">
+                  Lieu de rencontre
+                </span>
+
+                <h3>
+                  {{
+                    editgymnase.id > 0
+                      ? 'Modifier le gymnase'
+                      : 'Créer un gymnase'
+                  }}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="icon-button"
+                (click)="RetourGymnase()"
+              >
+                ×
+              </button>
+            </div>
+
+            <div class="form-field">
+              <label for="gymnaseNom">
+                Nom du gymnase
+              </label>
+
+              <input
+                id="gymnaseNom"
+                class="modern-input"
+                [(ngModel)]="editgymnase.nom"
+                placeholder="Ex. Gymnase Venise Gosnat"
+              >
+            </div>
+
+            <div class="editor-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="RetourGymnase()"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="ValiderGymnase()"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MES CRÉNEAUX -->
+
+        <div
+          *ngIf="activeTab === 'creneaux'"
+          class="tab-content"
+        >
+
+          <div
+            *ngIf="modeCreneau === null"
+            class="action-bar"
+          >
+            <div>
+              <strong>
+                Créneaux proposés par mon club
+              </strong>
+
+              <span>
+                {{ creneauxFiltres.length }}
+                créneau(x)
+              </span>
+            </div>
+
+            <div class="button-group">
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="modeCreneau = 'periodique'"
+              >
+                Créneau périodique
+              </button>
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="modeCreneau = 'unique'"
+              >
+                <span>+</span>
+                Créneau unique
+              </button>
+            </div>
+          </div>
+
+          <div
+            *ngIf="modeCreneau === null"
+            class="filter-panel"
+          >
+            <div class="filter-heading">
+              <div>
+                <strong>
+                  Filtrer les créneaux
+                </strong>
+
+                <span>
+                  Affinez la période ou le gymnase
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="text-button"
+                (click)="resetFilters()"
+              >
+                Réinitialiser
+              </button>
+            </div>
+
+            <div class="filter-grid">
+
+              <div class="form-field">
+                <label for="filterDateDebut">
+                  Date de début
+                </label>
+
+                <input
+                  id="filterDateDebut"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="filterDateDebut"
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="filterDateFin">
+                  Date de fin
+                </label>
+
+                <input
+                  id="filterDateFin"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="filterDateFin"
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="filterGymnase">
+                  Gymnase
+                </label>
+
+                <select
+                  id="filterGymnase"
+                  class="modern-input"
+                  [(ngModel)]="filterGymnase"
+                >
+                  <option [ngValue]="null">
+                    Tous les gymnases
+                  </option>
+
+                  <option
+                    *ngFor="let gymnase of gymnasesFiltres"
+                    [ngValue]="gymnase.id"
+                  >
+                    {{ gymnase.nom }}
+                  </option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+
+          <div
+            *ngIf="modeCreneau === null"
+            class="table-card"
+          >
+            <div class="table-scroll">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Horaires</th>
+                    <th>Gymnase</th>
+                    <th>Confirmation</th>
+                    <th>Matchs</th>
+                    <th>Notes</th>
+                    <th class="action-column">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let creneau of (
+                        creneauxFiltres
+                          | filterByDate:
+                              filterDateDebut:
+                              filterDateFin
+                          | filterByGymnase:
+                              filterGymnase
+                      );
+                      trackBy: trackById
+                    "
+                  >
+                    <td>
+                      <div class="date-cell">
+                        <strong>
+                          {{
+                            creneau.date
+                              | date: 'dd/MM/yyyy'
+                          }}
+                        </strong>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span class="time-badge">
+                        {{ creneau.heure_debut }}
+                        –
+                        {{ creneau.heure_fin }}
+                      </span>
+                    </td>
+
+                    <td>
+                      {{
+                        getGymnaseList(
+                          creneau.gymnase
+                        )
+                      }}
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        class="confirmation-toggle"
+                        [class.is-confirmed]="
+                          isCreneauConfirme(creneau)
+                        "
+                        (click)="toggleCreneauConfirme(creneau)"
+                      >
+                        {{
+                          isCreneauConfirme(creneau)
+                            ? 'Confirmé'
+                            : 'À confirmer'
+                        }}
+                      </button>
+                    </td>
+
+                    <td>
+                      <div
+                        *ngIf="
+                          getMatchsPourCreneau(
+                            creneau.id
+                          ).length === 0
+                        "
+                        class="muted-text"
+                      >
+                        Aucun match
+                      </div>
+
+                      <div
+                        *ngFor="
+                          let match of getMatchsPourCreneau(
+                            creneau.id
+                          )
+                        "
+                        class="match-pill"
+                      >
+                        <strong>
+                          {{
+                            getCategorieNom(
+                              match.categorie
+                            )
+                          }}
+                        </strong>
+
+                        <span>
+                          {{
+                            getEquipeNom(
+                              match.domicile
+                            )
+                          }}
+                          –
+                          {{
+                            getEquipeNom(
+                              match.exterieur
+                            )
+                          }}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <input
+                        type="text"
+                        class="inline-input"
+                        [(ngModel)]="creneau.notes"
+                        placeholder="Ajouter une note"
+                        (blur)="updateCreneau(creneau)"
+                      >
+                    </td>
+
+                    <td class="action-column">
+                      <button
+                        type="button"
+                        class="danger-link"
+                        (click)="confirmerSuppressionCreneau(creneau)"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            *ngIf="modeCreneau"
+            class="embedded-editor"
+          >
+            <app-formulaire-creneau
+              [liste_creneaux]="creneaux"
+              [gymnases]="gymnasesFiltres"
+              [indisponibilites]="indisponibilitesDuClub"
+              [mode]="modeCreneau"
+              (cancel)="modeCreneau = null"
+              (done)="rafraichirCreneaux()"
+              (creneaux)="CreerPeriodique($event)"
+            ></app-formulaire-creneau>
+          </div>
+
+        </div>
+
+        <!-- CRÉNEAUX PROPOSÉS -->
+
+        <div
+          *ngIf="activeTab === 'creneaux-proposes'"
+          class="tab-content"
+        >
+
+          <div class="information-banner">
+            <div class="information-icon">
+              CP
+            </div>
+
+            <div>
+              <strong>
+                Créneaux proposés par les autres clubs
+              </strong>
+
+              <p>
+                Filtrez les disponibilités de la saison par club
+                ou par période. Le badge « un club visiteur »
+                indique qu’un seul club pourra se positionner
+                sur l’ensemble du créneau.
+              </p>
+            </div>
+          </div>
+
+          <div class="filter-panel proposal-filter-panel">
+
+            <div class="filter-heading">
+              <div>
+                <strong>
+                  Rechercher un créneau
+                </strong>
+
+                <span>
+                  {{ creneauxProposesFiltres.length }}
+                  résultat(s) sur
+                  {{ creneauxProposes.length }}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="text-button"
+                (click)="resetFiltresCreneauxProposes()"
+              >
+                Réinitialiser
+              </button>
+            </div>
+
+            <div class="proposal-filter-grid">
+
+              <div class="form-field">
+                <label for="filtrePropositionClub">
+                  Club proposant
+                </label>
+
+                <select
+                  id="filtrePropositionClub"
+                  class="modern-input"
+                  [(ngModel)]="filtreCreneauProposeClub"
+                >
+                  <option [ngValue]="null">
+                    Tous les clubs
+                  </option>
+
+                  <option
+                    *ngFor="let club of clubsAvecCreneauxProposes"
+                    [ngValue]="club.id"
+                  >
+                    {{ club.nom }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="filtrePropositionDateDebut">
+                  À partir du
+                </label>
+
+                <input
+                  id="filtrePropositionDateDebut"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="filtreCreneauProposeDateDebut"
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="filtrePropositionDateFin">
+                  Jusqu’au
+                </label>
+
+                <input
+                  id="filtrePropositionDateFin"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="filtreCreneauProposeDateFin"
+                >
+              </div>
+
+            </div>
+
+          </div>
+
+          <div
+            *ngIf="creneauxProposesFiltres.length > 0"
+            class="proposal-grid"
+          >
+            <article
+              *ngFor="
+                let creneau of creneauxProposesFiltres;
+                trackBy: trackById
+              "
+              class="proposal-card"
+            >
+              <header>
+                <span class="proposal-club">
+                  {{
+                    getNomClubCreneau(
+                      creneau
+                    )
+                  }}
+                </span>
+
+                <div class="proposal-header-right">
+
+                  <span
+                    *ngIf="isCreneauUnClub(creneau)"
+                    class="proposal-policy-badge"
+                  >
+                    Un club visiteur
+                  </span>
+
+                  <span
+                    class="status-badge"
+                    [class.is-planned]="
+                      isCreneauConfirme(creneau)
+                    "
+                  >
+                    {{
+                      isCreneauConfirme(creneau)
+                        ? 'Confirmé'
+                        : 'Provisoire'
+                    }}
+                  </span>
+
+                  <span class="proposal-date">
+                    {{
+                      creneau.date
+                        | date: 'dd/MM/yyyy'
+                    }}
+                  </span>
+                </div>
+              </header>
+
+              <div class="proposal-time">
+                {{ creneau.heure_debut }}
+                –
+                {{ creneau.heure_fin }}
+              </div>
+
+              <div class="proposal-details">
+                <span>
+                  Gymnase
+                </span>
+
+                <strong>
+                  {{
+                    getGymnaseList(
+                      creneau.gymnase
+                    )
+                  }}
+                </strong>
+              </div>
+
+              <div class="proposal-details">
+                <span>
+                  Matchs déjà prévus
+                </span>
+
+                <strong>
+                  {{
+                    getMatchsPourCreneau(
+                      creneau.id
+                    ).length
+                  }}
+                </strong>
+              </div>
+
+              <div class="proposal-details">
+                <span>
+                  Politique d’accueil
+                </span>
+
+                <strong>
+                  {{
+                    isCreneauUnClub(creneau)
+                      ? 'Un seul club visiteur'
+                      : 'Plusieurs clubs possibles'
+                  }}
+                </strong>
+              </div>
+
+              <p
+                *ngIf="creneau.notes"
+                class="proposal-note"
+              >
+                {{ creneau.notes }}
+              </p>
+
+              <button
+                type="button"
+                class="secondary-button full-width" (click)="ProposerMatch()"
+              >
+                Proposer un match
+              </button>
+            </article>
+          </div>
+
+          <div
+            *ngIf="creneauxProposesFiltres.length === 0"
+            class="empty-state table-card"
+          >
+            <div class="empty-symbol">
+              CP
+            </div>
+
+            <h3>
+              Aucun créneau correspondant
+            </h3>
+
+            <p>
+              Modifiez le club ou la période de recherche.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- INDISPONIBILITÉS -->
+
+        <div
+          *ngIf="activeTab === 'indisponibilites'"
+          class="tab-content"
+        >
+
+          <div class="feature-intro">
+            <div>
+              <span class="content-eyebrow">
+                Contraintes de planification
+              </span>
+
+              <h3>
+                Gérer mes indisponibilités
+              </h3>
+
+              <p>
+                Déclarez une date ou une période bloquée pour
+                tout le club ou pour une équipe précise.
+                Elles apparaissent ensuite dans le calendrier
+                et dans l’évaluation des créneaux.
+              </p>
+            </div>
+
+            <button
+              *ngIf="!modeAjoutIndisponibilite"
+              type="button"
+              class="primary-button"
+              [disabled]="indisponibilitesLoading"
+              (click)="ouvrirAjoutIndisponibilite('club')"
+            >
+              <span>+</span>
+              Ajouter une indisponibilité
+            </button>
+          </div>
+
+          <div
+            *ngIf="modeAjoutIndisponibilite"
+            class="editor-card indispo-editor-card"
+          >
+
+            <div class="editor-heading">
+              <div>
+                <span class="content-eyebrow">
+                  Nouvelle contrainte
+                </span>
+
+                <h3>
+                  Ajouter une indisponibilité
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="icon-button"
+                (click)="fermerAjoutIndisponibilite()"
+              >
+                ×
+              </button>
+            </div>
+
+            <div class="indispo-form-grid">
+
+              <div class="form-field">
+                <label for="indispoType">
+                  Portée
+                </label>
+
+                <select
+                  id="indispoType"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleIndisponibilite.type"
+                  (ngModelChange)="
+                    nouvelleIndisponibilite.equipe =
+                      $event === 'equipe'
+                        ? equipesEngageesFiltres[0]?.id || null
+                        : null
+                  "
+                >
+                  <option value="club">
+                    Tout le club
+                  </option>
+
+                  <option value="equipe">
+                    Une équipe précise
+                  </option>
+                </select>
+              </div>
+
+              <div
+                *ngIf="
+                  nouvelleIndisponibilite.type === 'equipe'
+                "
+                class="form-field"
+              >
+                <label for="indispoEquipe">
+                  Équipe
+                </label>
+
+                <select
+                  id="indispoEquipe"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleIndisponibilite.equipe"
+                >
+                  <option
+                    *ngFor="let equipe of equipesEngageesFiltres"
+                    [ngValue]="equipe.id"
+                  >
+                    {{ equipe.nom }}
+                    ·
+                    {{ getCategorieNom(equipe.categorie) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="indispoDebut">
+                  Date de début
+                </label>
+
+                <input
+                  id="indispoDebut"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleIndisponibilite.date_debut"
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="indispoFin">
+                  Date de fin
+                </label>
+
+                <input
+                  id="indispoFin"
+                  type="date"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleIndisponibilite.date_fin"
+                >
+
+                <small class="form-help">
+                  Laissez vide pour une seule journée.
+                </small>
+              </div>
+
+              <div class="form-field indispo-motif-field">
+                <label for="indispoMotif">
+                  Motif
+                </label>
+
+                <input
+                  id="indispoMotif"
+                  type="text"
+                  class="modern-input"
+                  [(ngModel)]="nouvelleIndisponibilite.motif"
+                  placeholder="Ex. tournoi, équipe absente, gymnase fermé…"
+                >
+              </div>
+
+            </div>
+
+            <div class="editor-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="fermerAjoutIndisponibilite()"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                class="primary-button"
+                [disabled]="indisponibiliteSaving"
+                (click)="ajouterIndisponibilite()"
+              >
+                {{
+                  indisponibiliteSaving
+                    ? 'Enregistrement…'
+                    : 'Enregistrer'
+                }}
+              </button>
+            </div>
+
+          </div>
+
+          <div
+            *ngIf="indisponibilitesLoading"
+            class="content-loading indispo-loading"
+          >
+            <span class="spinner"></span>
+            Chargement des indisponibilités…
+          </div>
+
+          <div class="indispo-summary-grid">
+
+            <article class="indispo-summary-card">
+              <span>
+                Indisponibilités déclarées
+              </span>
+
+              <strong>
+                {{ indisponibilitesDuClub.length }}
+              </strong>
+            </article>
+
+            <article class="indispo-summary-card">
+              <span>
+                Pour tout le club
+              </span>
+
+              <strong>
+                {{ indisponibilitesClubCount }}
+              </strong>
+            </article>
+
+            <article class="indispo-summary-card">
+              <span>
+                Pour une équipe
+              </span>
+
+              <strong>
+                {{ indisponibilitesEquipeCount }}
+              </strong>
+            </article>
+
+          </div>
+
+          <div
+            *ngIf="
+              !indisponibilitesLoading &&
+              indisponibilitesDuClub.length === 0
+            "
+            class="empty-state table-card"
+          >
+            <div class="empty-symbol">
+              IN
+            </div>
+
+            <h3>
+              Aucune indisponibilité déclarée
+            </h3>
+
+            <p>
+              Le calendrier ne contient actuellement aucune
+              contrainte propre à votre club.
+            </p>
+          </div>
+
+          <div
+            *ngIf="
+              !indisponibilitesLoading &&
+              indisponibilitesDuClub.length > 0
+            "
+            class="table-card"
+          >
+            <div class="table-scroll">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Période</th>
+                    <th>Portée</th>
+                    <th>Cible</th>
+                    <th>Motif</th>
+                    <th class="action-column">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let indisponibilite of indisponibilitesDuClub;
+                      trackBy: trackById
+                    "
+                  >
+                    <td>
+                      <strong>
+                        {{
+                          getPeriodeIndisponibilite(
+                            indisponibilite
+                          )
+                        }}
+                      </strong>
+                    </td>
+
+                    <td>
+                      <span
+                        class="indispo-scope-badge"
+                        [class.is-team]="
+                          indisponibilite.type === 'equipe'
+                        "
+                      >
+                        {{
+                          indisponibilite.type === 'equipe'
+                            ? 'Équipe'
+                            : 'Club'
+                        }}
+                      </span>
+                    </td>
+
+                    <td>
+                      {{
+                        getCibleIndisponibilite(
+                          indisponibilite
+                        )
+                      }}
+                    </td>
+
+                    <td>
+                      {{ indisponibilite.motif }}
+                    </td>
+
+                    <td class="action-column">
+                      <button
+                        type="button"
+                        class="danger-link"
+                        [disabled]="
+                          indisponibiliteDeletingId ===
+                          indisponibilite.id
+                        "
+                        (click)="
+                          supprimerIndisponibilite(
+                            indisponibilite
+                          )
+                        "
+                      >
+                        {{
+                          indisponibiliteDeletingId ===
+                          indisponibilite.id
+                            ? 'Suppression…'
+                            : 'Supprimer'
+                        }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          
+        </div>
+
+        <!-- ARBITRAGE -->
+
+        <div
+          *ngIf="activeTab === 'arbitrage'"
+          class="tab-content"
+        >
+
+          <div class="arbitrage-summary">
+            <article class="arbitrage-summary-card is-pending">
+              <span>Demandes / propositions</span>
+              <strong>
+                {{ arbitragesAValider.length }}
+              </strong>
+            </article>
+
+            <article class="arbitrage-summary-card is-confirmed">
+              <span>Arbitrages confirmés</span>
+              <strong>
+                {{ arbitragesConfirmes.length }}
+              </strong>
+            </article>
+          </div>
+
+          <section class="arbitrage-section">
+
+            <div class="section-heading">
+              <div>
+                <span class="content-eyebrow">
+                  Action requise
+                </span>
+
+                <h3>
+                  Arbitrages à confirmer
+                </h3>
+
+                <p>
+                  Votre club est proposé pour arbitrer ces rencontres.
+                  Confirmez ou refusez son engagement.
+                </p>
+              </div>
+
+              <span class="pending-count">
+                {{ arbitragesAValider.length }}
+              </span>
+            </div>
+
+            <div
+              *ngIf="arbitragesAValider.length === 0"
+              class="empty-state table-card"
+            >
+              <div class="empty-symbol">
+                AR
+              </div>
+
+              <h3>
+                Aucun arbitrage en attente
+              </h3>
+
+              <p>
+                Les demandes reçues et vos propositions
+                apparaîtront ici.
+              </p>
+            </div>
+
+            <div
+              *ngIf="arbitragesAValider.length > 0"
+              class="table-card"
+            >
+              <div class="table-scroll">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Catégorie</th>
+                      <th>Rencontre</th>
+                      <th>Club recevant</th>
+                      <th>Gymnase</th>
+                      <th class="arbitrage-actions-column">
+                        Réponse
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr
+                      *ngFor="
+                        let match of arbitragesAValider;
+                        trackBy: trackById
+                      "
+                    >
+                      <td>
+                        <strong>
+                          {{ getDateArbitrage(match) }}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span class="category-badge">
+                          {{
+                            getCategorieNom(
+                              match.categorie
+                            )
+                          }}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div class="fixture">
+                          <strong>
+                            {{
+                              getEquipeNom(
+                                match.domicile
+                              )
+                            }}
+                          </strong>
+
+                          <span>vs</span>
+
+                          <strong>
+                            {{
+                              getEquipeNom(
+                                match.exterieur
+                              )
+                            }}
+                          </strong>
+                        </div>
+                      </td>
+
+                      <td>
+                        {{
+                          getNomClub(
+                            match.club_recevant
+                          )
+                        }}
+                      </td>
+
+                      <td>
+                        {{ getGymnase(match) }}
+                      </td>
+
+                      <td class="arbitrage-actions-column">
+                        <div class="arbitrage-actions">
+                          <button
+                            type="button"
+                            class="success-button compact"
+                            [disabled]="arbitrageSaving"
+                            (click)="validerArbitrage(match)"
+                          >
+                            Accepter
+                          </button>
+
+                          <button
+                            type="button"
+                            class="danger-button compact"
+                            [disabled]="arbitrageSaving"
+                            (click)="refuserArbitrage(match)"
+                          >
+                            Refuser
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </section>
+
+          <section class="arbitrage-section confirmed-section">
+
+            <div class="section-heading">
+              <div>
+                <span class="content-eyebrow">
+                  Engagements
+                </span>
+
+                <h3>
+                  Mes arbitrages confirmés
+                </h3>
+
+                <p>
+                  Les rencontres que votre club a accepté
+                  d’arbitrer sur cette saison.
+                </p>
+              </div>
+            </div>
+
+            <div
+              *ngIf="arbitragesConfirmes.length === 0"
+              class="empty-state table-card"
+            >
+              <div class="empty-symbol is-success">
+                OK
+              </div>
+
+              <h3>
+                Aucun arbitrage confirmé
+              </h3>
+
+              <p>
+                Les demandes acceptées seront regroupées ici.
+              </p>
+            </div>
+
+            <div
+              *ngIf="arbitragesConfirmes.length > 0"
+              class="table-card"
+            >
+              <div class="table-scroll">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Catégorie</th>
+                      <th>Rencontre</th>
+                      <th>Club recevant</th>
+                      <th>Gymnase</th>
+                      <th>État</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr
+                      *ngFor="
+                        let match of arbitragesConfirmes;
+                        trackBy: trackById
+                      "
+                    >
+                      <td>
+                        <strong>
+                          {{ getDateArbitrage(match) }}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span class="category-badge">
+                          {{
+                            getCategorieNom(
+                              match.categorie
+                            )
+                          }}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div class="fixture">
+                          <strong>
+                            {{
+                              getEquipeNom(
+                                match.domicile
+                              )
+                            }}
+                          </strong>
+
+                          <span>vs</span>
+
+                          <strong>
+                            {{
+                              getEquipeNom(
+                                match.exterieur
+                              )
+                            }}
+                          </strong>
+                        </div>
+                      </td>
+
+                      <td>
+                        {{
+                          getNomClub(
+                            match.club_recevant
+                          )
+                        }}
+                      </td>
+
+                      <td>
+                        {{ getGymnase(match) }}
+                      </td>
+
+                      <td>
+                        <span class="status-badge is-planned">
+                          Confirmé
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </section>
+
+        </div>
+
+        <!-- MATCHS -->
+
+        <div
+          *ngIf="activeTab === 'matchs'"
+          class="tab-content"
+        >
+
+          <div class="filter-component-card">
+            <app-filtre-calendrier
+              mode="matchs"
+              [clubs]="clubs"
+              [categories]="categories"
+              [equipes]="equipesEngagees"
+              (filtreChange)="majFiltres($event)"
+            ></app-filtre-calendrier>
+          </div>
+
+          <div class="table-card">
+            <div class="table-scroll">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Catégorie</th>
+                    <th>Rencontre</th>
+                    <th>Club recevant</th>
+                    <th>Gymnase</th>
+                    <th>État</th>
+                    <th>Arbitrage</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let match of matchsFiltres;
+                      trackBy: trackById
+                    "
+                  >
+                    <td>
+                      {{ getDateMatch(match) }}
+                    </td>
+
+                    <td>
+                      <span class="category-badge">
+                        {{
+                          getCategorieNom(
+                            match.categorie
+                          )
+                        }}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div class="fixture">
+                        <strong>
+                          {{
+                            getEquipeNom(
+                              match.domicile
+                            )
+                          }}
+                        </strong>
+
+                        <span>vs</span>
+
+                        <strong>
+                          {{
+                            getEquipeNom(
+                              match.exterieur
+                            )
+                          }}
+                        </strong>
+                      </div>
+                    </td>
+
+                    <td>
+                      {{
+                        getNomClub(
+                          match.club_recevant
+                        )
+                      }}
+                    </td>
+
+                    <td>
+                      {{ getGymnase(match) }}
+                    </td>
+
+                    <td>
+                      <span
+                        class="status-badge"
+                        [class.is-planned]="
+                          match.creneau_choisi > 0
+                        "
+                      >
+                        {{
+                          match.creneau_choisi > 0
+                            ? 'Planifié'
+                            : 'À planifier'
+                        }}
+                      </span>
+                    </td>
+
+
+                    <td class="referee-cell">
+                      <button
+                        type="button"
+                        class="referee-action-button"
+                        [class.is-pending]="
+                          arbitrageEnAttente(match)
+                        "
+                        [class.is-confirmed]="
+                          arbitrageConfirme(match)
+                        "
+                        (click)="
+                          ouvrirArbitrageModal(match)
+                        "
+                        [attr.aria-label]="
+                          getLibelleArbitrage(match)
+                        "
+                      >
+                        <span class="referee-state-icon">
+                          {{ getIconeArbitrage(match) }}
+                        </span>
+
+                        <span class="referee-state-copy">
+                          <strong>
+                            {{ getLibelleArbitrage(match) }}
+                          </strong>
+
+                          <small>
+                            {{ getSousLibelleArbitrage(match) }}
+                          </small>
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PLANIFICATION -->
+
+        <div
+          *ngIf="activeTab === 'planification'"
+          class="tab-content"
+        >
+          <div class="embedded-editor">
+            <app-match-planning
+              [getGymnaseList]="getGymnaseList.bind(this)"
+              [evaluerCreneau]="EvaluerCreneau.bind(this)"
+              [creneaux]="creneaux"
+              [categorie]="categories"
+              [matchs]="matchs"
+              [equipesEngagees]="equipesEngagees"
+              (done)="rafraichirCreneaux()"
+            ></app-match-planning>
+          </div>
+        </div>
+
+        <!-- CALENDRIER -->
+
+        <div
+          *ngIf="activeTab === 'calendrier'"
+          class="tab-content"
+        >
+
+          <div class="information-banner">
+            <div class="information-icon">
+              CA
+            </div>
+
+            <div>
+              <strong>
+                Calendrier de la saison
+                {{ selectedSaisonNom }}
+              </strong>
+
+              <p>
+                Matchs, vacances, jours fériés et indisponibilités
+                sont regroupés dans une même vue filtrable.
+              </p>
+            </div>
+          </div>
+
+          <div class="filter-component-card calendar-filter-card">
+            <app-filtre-calendrier
+              mode="calendrier"
+              [clubs]="clubs"
+              [categories]="categories"
+              [equipes]="equipesEngagees"
+              [indisponibilites]="indisponibilites"
+              (filtreChange)="majFiltresCalendrier($event)"
+            ></app-filtre-calendrier>
+          </div>
+
+          <div class="calendar-result-summary">
+            <strong>
+              {{ calendrierCompletFiltres.length }}
+              jour(s) affiché(s)
+            </strong>
+
+            <span>
+              sur {{ calendrierComplet.length }}
+              jours dans la saison
+            </span>
+          </div>
+
+          <div class="table-card calendar-card">
+            <div class="table-scroll">
+              <table class="modern-table calendar-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Matchs</th>
+                    <th>Événements</th>
+                    <th>Indisponibilités</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr
+                    *ngFor="let jour of calendrierCompletFiltres"
+                    [class.weekend-row]="isWeekend(jour.date)"
+                    [class.has-content]="
+                      jour.matchs.length > 0 ||
+                      jour.evenements.length > 0 ||
+                      jour.indisponibilites.length > 0
+                    "
+                  >
+                    <td>
+                      <div class="calendar-date">
+                        <strong>
+                          {{
+                            jour.date
+                              | date: 'EEEE'
+                          }}
+                        </strong>
+
+                        <span>
+                          {{
+                            jour.date
+                              | date: 'dd/MM/yyyy'
+                          }}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div
+                        *ngIf="jour.matchs.length === 0"
+                        class="muted-text"
+                      >
+                        —
+                      </div>
+
+                      <div
+                        *ngFor="let match of jour.matchs"
+                        class="calendar-item match-calendar-item"
+                      >
+                        <strong>
+                          {{
+                            getCategorieNom(
+                              match.categorie
+                            )
+                          }}
+                        </strong>
+
+                        <span>
+                          {{
+                            getEquipeNom(
+                              match.domicile
+                            )
+                          }}
+                          –
+                          {{
+                            getEquipeNom(
+                              match.exterieur
+                            )
+                          }}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div
+                        *ngIf="jour.evenements.length === 0"
+                        class="muted-text"
+                      >
+                        —
+                      </div>
+
+                      <div
+                        *ngFor="let evenement of jour.evenements"
+                        class="calendar-item event-calendar-item"
+                      >
+                        {{ evenement.libelle }}
+                      </div>
+                    </td>
+
+                    <td>
+                      <div
+                        *ngIf="jour.indisponibilites.length === 0"
+                        class="muted-text"
+                      >
+                        —
+                      </div>
+
+                      <div
+                        *ngFor="
+                          let indisponibilite of jour.indisponibilites
+                        "
+                        class="calendar-item indispo-calendar-item"
+                      >
+                        <strong>
+                          {{
+                            getCibleIndisponibilite(
+                              indisponibilite
+                            )
+                          }}
+                        </strong>
+
+                        <span>
+                          {{ indisponibilite.motif }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <!-- POPIN D'ARBITRAGE -->
+
+  <div
+    *ngIf="arbitrageModalMatch as match"
+    class="arbitrage-modal-backdrop"
+    (click)="fermerArbitrageModal()"
+  >
+    <section
+      class="arbitrage-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="arbitrageModalTitle"
+      (click)="$event.stopPropagation()"
+    >
+
+      <header class="arbitrage-modal-header">
+        <div>
+          <span class="content-eyebrow">
+            Gestion de l’arbitrage
+          </span>
+
+          <h3 id="arbitrageModalTitle">
+            {{
+              getEquipeNom(match.domicile)
+            }}
+            <span>contre</span>
+            {{
+              getEquipeNom(match.exterieur)
+            }}
+          </h3>
+
+          <p>
+            {{ getDateMatch(match) }}
+            ·
+            {{ getGymnase(match) }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="arbitrage-modal-close"
+          [disabled]="arbitrageSaving"
+          (click)="fermerArbitrageModal()"
+          aria-label="Fermer"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        class="arbitrage-current-state"
+        [class.is-pending]="
+          arbitrageEnAttente(match)
+        "
+        [class.is-confirmed]="
+          arbitrageConfirme(match)
+        "
+      >
+        <span class="referee-state-icon large">
+          {{ getIconeArbitrage(match) }}
+        </span>
+
+        <div>
+          <strong>
+            {{ getLibelleArbitrage(match) }}
+          </strong>
+
+          <p>
+            <ng-container
+              *ngIf="match.arbitre; else aucunArbitre"
+            >
+              {{ getNomArbitre(match) }}
+            </ng-container>
+
+            <ng-template #aucunArbitre>
+              Aucun club n’est encore positionné.
+            </ng-template>
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngIf="arbitrageModalMessage"
+        class="arbitrage-modal-alert"
+      >
+        {{ arbitrageModalMessage }}
+      </div>
+
+      <!-- Aucun arbitre : le club participant en sollicite un -->
+
+      <section
+        *ngIf="
+          !match.arbitre &&
+          estMatchDeMonClub(match)
+        "
+        class="arbitrage-modal-section"
+      >
+        <h4>
+          Envoyer une demande
+        </h4>
+
+        <p>
+          Sélectionnez un club extérieur à la rencontre.
+          La demande restera en attente jusqu’à son acceptation.
+        </p>
+
+        <div class="form-field">
+          <label for="arbitrageClubSelectionne">
+            Club sollicité
+          </label>
+
+          <select
+            id="arbitrageClubSelectionne"
+            class="modern-input"
+            [(ngModel)]="arbitrageClubSelectionne"
+          >
+            <option [ngValue]="null">
+              Sélectionner un club
+            </option>
+
+            <option
+              *ngFor="let club of clubsArbitresDisponibles"
+              [ngValue]="club.id"
+            >
+              {{ club.nom }}
+            </option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="primary-button full-width"
+          [disabled]="
+            arbitrageSaving ||
+            !arbitrageClubSelectionne
+          "
+          (click)="envoyerDemandeArbitrage()"
+        >
+          {{
+            arbitrageSaving
+              ? 'Envoi…'
+              : 'Envoyer la demande d’arbitrage'
+          }}
+        </button>
+      </section>
+
+      <!-- Aucun arbitre : un autre club se propose -->
+
+      <section
+        *ngIf="
+          !match.arbitre &&
+          !estMatchDeMonClub(match)
+        "
+        class="arbitrage-modal-section"
+      >
+        <h4>
+          Proposer mon club
+        </h4>
+
+        <p>
+          {{ selectedClubNom }} sera enregistré comme arbitre proposé.
+          La proposition restera en attente de confirmation.
+        </p>
+
+        <button
+          type="button"
+          class="primary-button full-width"
+          [disabled]="arbitrageSaving"
+          (click)="seProposerArbitrage()"
+        >
+          {{
+            arbitrageSaving
+              ? 'Enregistrement…'
+              : 'Se proposer pour arbitrer'
+          }}
+        </button>
+      </section>
+
+      <!-- Proposition en attente reçue par notre club -->
+
+      <section
+        *ngIf="
+          arbitrageEnAttente(match) &&
+          estArbitreDeMonClub(match)
+        "
+        class="arbitrage-modal-section"
+      >
+        <h4>
+          Proposition à confirmer
+        </h4>
+
+        <p>
+          Votre club est actuellement proposé pour arbitrer cette rencontre.
+        </p>
+
+        <div class="arbitrage-modal-actions">
+          <button
+            type="button"
+            class="danger-button"
+            [disabled]="arbitrageSaving"
+            (click)="refuserArbitrage(match)"
+          >
+            Refuser
+          </button>
+
+          <button
+            type="button"
+            class="success-button"
+            [disabled]="arbitrageSaving"
+            (click)="validerArbitrage(match)"
+          >
+            Confirmer l’arbitrage
+          </button>
+        </div>
+      </section>
+
+      <!-- Demande envoyée par l'un de nos matchs -->
+
+      <section
+        *ngIf="
+          arbitrageEnAttente(match) &&
+          estMatchDeMonClub(match) &&
+          !estArbitreDeMonClub(match)
+        "
+        class="arbitrage-modal-section"
+      >
+        <h4>
+          Demande en attente
+        </h4>
+
+        <p>
+          {{ getNomArbitre(match) }} n’a pas encore confirmé l’arbitrage.
+        </p>
+
+        <button
+          type="button"
+          class="danger-button full-width"
+          [disabled]="arbitrageSaving"
+          (click)="retirerArbitre(match)"
+        >
+          Annuler la demande
+        </button>
+      </section>
+
+      <!-- Proposition d'un autre club, vue en lecture seule -->
+
+      <section
+        *ngIf="
+          arbitrageEnAttente(match) &&
+          !estMatchDeMonClub(match) &&
+          !estArbitreDeMonClub(match)
+        "
+        class="arbitrage-modal-section is-readonly"
+      >
+        <h4>
+          Proposition déjà en attente
+        </h4>
+
+        <p>
+          {{ getNomArbitre(match) }} est déjà proposé pour ce match.
+        </p>
+      </section>
+
+      <!-- Arbitrage confirmé -->
+
+      <section
+        *ngIf="arbitrageConfirme(match)"
+        class="arbitrage-modal-section"
+      >
+        <h4>
+          Arbitrage confirmé
+        </h4>
+
+        <p>
+          {{ getNomArbitre(match) }} est confirmé pour cette rencontre.
+        </p>
+
+        <button
+          *ngIf="
+            estMatchDeMonClub(match) ||
+            estArbitreDeMonClub(match)
+          "
+          type="button"
+          class="danger-button full-width"
+          [disabled]="arbitrageSaving"
+          (click)="retirerArbitre(match)"
+        >
+          Retirer cet arbitre
+        </button>
+      </section>
+
+    </section>
+  </div>
+
+</div>

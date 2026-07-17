@@ -1,21 +1,33 @@
-import { NgModule } from '@angular/core';
+import {
+  LOCALE_ID,
+  NgModule
+} from '@angular/core';
+
+import {
+  DatePipe,
+  registerLocaleData
+} from '@angular/common';
+
+import localeFr
+  from '@angular/common/locales/fr';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AllServices } from './services';
-import { ClubComponent } from './club/club/club.component';
+import { ClubComponent } from './club/club.component';
 import { FormsModule } from '@angular/forms';
 import { DbService } from './db.service';
 import { HttpClientModule } from '@angular/common/http';
-import { MainComponent } from './main/main/main.component';
-import { FormulaireCreneauComponent } from './formulaire-creneau/formulaire-creneau/formulaire-creneau.component';
-import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier/filtre-calendrier.component';
+import { MainComponent } from './main/main.component';
+import { FormulaireCreneauComponent } from './formulaire-creneau/formulaire-creneau.component';
+import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier.component';
 import { MatchPlanningComponent } from './match-planning/match-planning.component';
-import { DatePipe } from '@angular/common';
 import { FilterByDatePipe } from './filterDate.pipe';
 import { FilterByGymnasePipe } from './filterGymnase.pipe';
-
+registerLocaleData(
+  localeFr,
+  'fr-FR'
+);
 @NgModule({
   declarations: [
     AppComponent,
@@ -29,7 +41,14 @@ import { FilterByGymnasePipe } from './filterGymnase.pipe';
     BrowserModule, HttpClientModule,
     AppRoutingModule, FormsModule
   ],
-  providers: [DbService, DatePipe],
+  providers: [
+    DatePipe, DbService,
+
+    {
+      provide: LOCALE_ID,
+      useValue: 'fr-FR'
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

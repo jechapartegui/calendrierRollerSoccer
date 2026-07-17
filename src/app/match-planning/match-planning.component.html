@@ -1,145 +1,409 @@
-<div class="layout-container">
-  <!-- Partie gauche (planning) -->
-  <section *ngIf="!selectedMatch"
-    class="panel panel-left"
-  >
-    <h2 class="title is-4 panel-header">Matchs à planifier</h2>
-    <div class="field">
-      <label class="checkbox">
-        <input type="checkbox" [(ngModel)]="filtreSansCreneau" (change)="loadData()"> Matchs sans créneau uniquement
+<div class="planning-shell">
+
+  <ng-container *ngIf="!selectedMatch">
+
+    <header class="planning-header">
+      <div class="planning-title">
+        <span class="planning-eyebrow">Organisation des rencontres</span>
+        <h2>Planifier mes matchs</h2>
+        <p>
+          Choisissez une rencontre, puis comparez les créneaux selon leur score,
+          leur confirmation et les contraintes déjà connues.
+        </p>
+      </div>
+
+      <div class="planning-stats">
+        <article class="planning-stat">
+          <span>À planifier</span>
+          <strong>{{ matchsAPlanifierCount }}</strong>
+        </article>
+
+        <article class="planning-stat">
+          <span>Planifiés</span>
+          <strong>{{ matchsPlanifiesCount }}</strong>
+        </article>
+
+        <article class="planning-stat">
+          <span>Créneaux confirmés</span>
+          <strong>{{ creneauxConfirmesCount }}</strong>
+        </article>
+      </div>
+    </header>
+
+    <section class="planning-toolbar">
+      <label class="toggle-filter">
+        <input
+          type="checkbox"
+          [(ngModel)]="filtreSansCreneau"
+          (change)="loadData()"
+        >
+        <span class="toggle-control"></span>
+        <span>Matchs sans créneau uniquement</span>
       </label>
-    </div>
-    <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
-      <thead>
-        <tr><th>Catégorie</th><th>Rencontre</th><th>Action</th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let m of matchsFiltres">
-           <td>{{ getCategorieNom(m.categorie) }}</td>
-          <td>{{ getEquipeNom(m.domicile) }} - {{ getEquipeNom(m.exterieur) }}</td>
-          <td>
-            <button *ngIf="m.creneau_choisi == 0" class="button is-small is-info" (click)="selectMatch(m)">Planifier</button>
-            <button *ngIf="m.creneau_choisi >0" class="button is-small is-warning ml-2" (click)="selectMatch(m)">Retirer</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+      <div class="toolbar-fields">
+        <div class="toolbar-field">
+          <label for="filtreCategorie">Catégorie</label>
+          <select
+            id="filtreCategorie"
+            [(ngModel)]="filtreCategorie"
+            (ngModelChange)="loadData()"
+          >
+            <option [ngValue]="null">Toutes les catégories</option>
+            <option *ngFor="let cat of categorie" [ngValue]="cat.id">
+              {{ cat.nom }}
+            </option>
+          </select>
+        </div>
+
+        <div class="toolbar-field search-field">
+          <label for="rechercheMatch">Rechercher</label>
+          <input
+            id="rechercheMatch"
+            type="search"
+            [(ngModel)]="recherche"
+            (ngModelChange)="loadData()"
+            placeholder="Équipe, catégorie, club…"
+          >
+        </div>
+      </div>
     </section>
-   <section *ngIf="selectedMatch"
-    class="panel panel-right"
+
+    <section class="match-list-card">
+      <div *ngIf="matchsFiltres.length === 0" class="empty-state">
+        <span class="empty-symbol">✓</span>
+        <h3>Aucun match à afficher</h3>
+        <p>
+          Modifiez les filtres ou affichez également les rencontres déjà planifiées.
+        </p>
+      </div>
+
+      <div *ngIf="matchsFiltres.length > 0" class="match-list">
+        <article
+          *ngFor="let match of matchsFiltres; trackBy: trackById"
+          class="match-row"
+        >
+          <div class="match-category">
+            <span class="category-badge">
+              {{ getCategorieNom(match.categorie) }}
+            </span>
+          </div>
+
+          <div class="match-fixture">
+            <div class="team">
+              <span class="team-label">Domicile</span>
+              <strong>{{ getEquipeNom(match.domicile) }}</strong>
+            </div>
+
+            <span class="versus">VS</span>
+
+            <div class="team">
+              <span class="team-label">Extérieur</span>
+              <strong>{{ getEquipeNom(match.exterieur) }}</strong>
+            </div>
+          </div>
+
+          <div class="match-receiver">
+            <span>Club recevant</span>
+            <strong>{{ getClubNom(getClubRecevant(match)) }}</strong>
+          </div>
+
+          <div class="match-status">
+            <span
+              class="status-badge"
+              [class.is-planned]="match.creneau_choisi > 0"
+            >
+              {{ match.creneau_choisi > 0 ? 'Planifié' : 'À planifier' }}
+            </span>
+          </div>
+
+          <div class="match-action">
+            <button
+              type="button"
+              class="primary-button compact"
+              (click)="selectMatch(match)"
+            >
+              {{ match.creneau_choisi > 0 ? 'Modifier' : 'Planifier' }}
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </ng-container>
+
+  <ng-container *ngIf="selectedMatch">
+
+    <button type="button" class="back-button" (click)="retourListe()">
+      ← Retour aux matchs
+    </button>
+
+    <section class="selected-match-card">
+      <div class="selected-match-main">
+        <span class="category-badge large">
+          {{ getCategorieNom(selectedMatch.categorie) }}
+        </span>
+
+        <div class="selected-fixture">
+          <strong>{{ getEquipeNom(selectedMatch.domicile) }}</strong>
+          <span>contre</span>
+          <strong>{{ getEquipeNom(selectedMatch.exterieur) }}</strong>
+        </div>
+
+        <p>
+          Réception organisée par
+          <strong>{{ getClubNom(getClubRecevant(selectedMatch)) }}</strong>
+        </p>
+      </div>
+
+      <div *ngIf="currentCreneau" class="current-assignment">
+        <span class="assignment-label">Créneau actuel</span>
+        <strong>
+          {{ currentCreneau.date | date: 'dd/MM/yyyy' }} ·
+          {{ currentCreneau.heure_debut }} – {{ currentCreneau.heure_fin }}
+        </strong>
+        <span>{{ getGymnaseList(currentCreneau.gymnase) }}</span>
+
+        <div class="assignment-badges">
+          <span
+            class="slot-badge"
+            [class.is-confirmed]="estCreneauConfirme(currentCreneau)"
+          >
+            {{ estCreneauConfirme(currentCreneau) ? 'Date confirmée' : 'Date provisoire' }}
+          </span>
+
+          <span
+            *ngIf="estCreneauUnClub(currentCreneau)"
+            class="slot-badge is-single-club"
+          >
+            Un seul club visiteur
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="danger-button"
+          [disabled]="saving"
+          (click)="retirerCreneau()"
+        >
+          Retirer le créneau
+        </button>
+      </div>
+    </section>
+
+    <div *ngIf="errorMessage" class="planning-error">
+      <span>!</span>
+      {{ errorMessage }}
+    </div>
+
+    <section class="slot-summary">
+      <article>
+        <span>Créneaux éligibles</span>
+        <strong>{{ nombreCreneauxEligibles }}</strong>
+      </article>
+
+      <article class="is-good">
+        <span>Recommandés</span>
+        <strong>{{ creneauxRecommandes.length }}</strong>
+      </article>
+
+      <article class="is-warning">
+        <span>Acceptables</span>
+        <strong>{{ creneauxAcceptables.length }}</strong>
+      </article>
+
+      <article class="is-danger">
+        <span>Déconseillés</span>
+        <strong>{{ creneauxDeconseilles.length }}</strong>
+      </article>
+
+      <article *ngIf="creneauxIncompatibles.length > 0" class="is-blocked">
+        <span>Bloqués</span>
+        <strong>{{ creneauxIncompatibles.length }}</strong>
+      </article>
+    </section>
+
+    <div *ngIf="!hasCreneaux" class="empty-state slot-empty">
+      <span class="empty-symbol">CR</span>
+      <h3>Aucun créneau disponible</h3>
+      <p>Le club recevant n’a encore proposé aucun créneau pour cette saison.</p>
+    </div>
+
+    <section *ngIf="creneauxRecommandes.length > 0" class="slot-section">
+      <header class="slot-section-header is-good">
+        <div>
+          <span class="section-symbol">01</span>
+          <div>
+            <h3>Créneaux recommandés</h3>
+            <p>Aucun point de vigilance majeur détecté.</p>
+          </div>
+        </div>
+        <strong>{{ creneauxRecommandes.length }}</strong>
+      </header>
+
+      <div class="slot-grid">
+        <article
+          *ngFor="let creneau of creneauxRecommandes; trackBy: trackById"
+          class="slot-card is-good"
+        >
+          <ng-container
+            *ngTemplateOutlet="slotCardContent; context: {
+              creneau: creneau,
+              actionLabel: 'Choisir ce créneau',
+              disabled: false
+            }"
+          ></ng-container>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="creneauxAcceptables.length > 0" class="slot-section">
+      <header class="slot-section-header is-warning">
+        <div>
+          <span class="section-symbol">02</span>
+          <div>
+            <h3>Créneaux acceptables</h3>
+            <p>Quelques contraintes existent, mais le créneau reste exploitable.</p>
+          </div>
+        </div>
+        <strong>{{ creneauxAcceptables.length }}</strong>
+      </header>
+
+      <div class="slot-grid">
+        <article
+          *ngFor="let creneau of creneauxAcceptables; trackBy: trackById"
+          class="slot-card is-warning"
+        >
+          <ng-container
+            *ngTemplateOutlet="slotCardContent; context: {
+              creneau: creneau,
+              actionLabel: 'Choisir malgré les contraintes',
+              disabled: false
+            }"
+          ></ng-container>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="creneauxDeconseilles.length > 0" class="slot-section">
+      <header class="slot-section-header is-danger">
+        <div>
+          <span class="section-symbol">03</span>
+          <div>
+            <h3>Créneaux déconseillés</h3>
+            <p>Plusieurs contraintes rendent ces dates moins adaptées.</p>
+          </div>
+        </div>
+        <strong>{{ creneauxDeconseilles.length }}</strong>
+      </header>
+
+      <div class="slot-grid">
+        <article
+          *ngFor="let creneau of creneauxDeconseilles; trackBy: trackById"
+          class="slot-card is-danger"
+        >
+          <ng-container
+            *ngTemplateOutlet="slotCardContent; context: {
+              creneau: creneau,
+              actionLabel: 'Choisir quand même',
+              disabled: false
+            }"
+          ></ng-container>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="creneauxIncompatibles.length > 0" class="slot-section">
+      <header class="slot-section-header is-blocked">
+        <div>
+          <span class="section-symbol">×</span>
+          <div>
+            <h3>Créneaux non disponibles</h3>
+            <p>Ils sont limités à un seul club visiteur déjà positionné.</p>
+          </div>
+        </div>
+        <strong>{{ creneauxIncompatibles.length }}</strong>
+      </header>
+
+      <div class="slot-grid">
+        <article
+          *ngFor="let creneau of creneauxIncompatibles; trackBy: trackById"
+          class="slot-card is-blocked"
+        >
+          <ng-container
+            *ngTemplateOutlet="slotCardContent; context: {
+              creneau: creneau,
+              actionLabel: 'Créneau indisponible',
+              disabled: true
+            }"
+          ></ng-container>
+        </article>
+      </div>
+    </section>
+
+  </ng-container>
+
+  <ng-template
+    #slotCardContent
+    let-creneau="creneau"
+    let-actionLabel="actionLabel"
+    let-disabled="disabled"
   >
+    <header class="slot-card-header">
+      <div class="slot-date">
+        <strong>{{ creneau.date | date: 'EEEE' }}</strong>
+        <span>{{ creneau.date | date: 'dd/MM/yyyy' }}</span>
+      </div>
+
+      <span class="score-badge">Score {{ creneau.score }}</span>
+    </header>
+
+    <div class="slot-time">
+      {{ creneau.heure_debut }} – {{ creneau.heure_fin }}
+    </div>
+
+    <div class="slot-location">
+      <span>Gymnase</span>
+      <strong>{{ getGymnaseList(creneau.gymnase) }}</strong>
+    </div>
+
+    <div class="slot-meta">
+      <span
+        class="slot-badge"
+        [class.is-confirmed]="estCreneauConfirme(creneau)"
+      >
+        {{ estCreneauConfirme(creneau) ? 'Date confirmée' : 'Date provisoire' }}
+      </span>
+
+      <span
+        *ngIf="estCreneauUnClub(creneau)"
+        class="slot-badge is-single-club"
+      >
+        Un club visiteur
+      </span>
+
+      <span class="slot-badge is-occupancy">
+        {{ getNombreMatchsCreneau(creneau.id) }} match(s)
+      </span>
+    </div>
+
+    <div class="slot-reasons" [innerHTML]="creneau.motif"></div>
+
+    <p
+      *ngIf="creneau.notes && creneau.notes.length > 0"
+      class="slot-note"
+    >
+      {{ creneau.notes }}
+    </p>
+
     <button
-      class="button is-link is-small btn-toggle"
-      (click)="toggleRight()"
-    >Retour
+      type="button"
+      class="slot-action-button"
+      [disabled]="saving || disabled"
+      (click)="validerCreneau(creneau.id)"
+    >
+      {{ saving ? 'Enregistrement…' : actionLabel }}
     </button>
-    <h2 class="title is-4 panel-header">Planification du match</h2>
-      <h3 class="title is-5 is-primary">&nbsp;{{ getCategorieNom(selectedMatch.categorie) }}&nbsp;{{ getEquipeNom(selectedMatch.domicile) }} - {{ getEquipeNom(selectedMatch.exterieur) }}</h3>
-    <button *ngIf="selectedMatch.creneau_choisi" class="button is-danger mb-3" (click)="retirerCreneau()">Retirer le créneau</button>
+  </ng-template>
 
-    <div class="mb-5">
-      <h3 class="subtitle is-5 is-primary">Créneaux recommandés</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
-        <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let c of creneauxRecommandes">
-  <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
-  <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
-  <td>
-  <!-- ton motif (liste UL) -->
-  <div [innerHTML]="c.motif"></div>
-
-  <!-- tes notes (si présentes) -->
-  <p
-    *ngIf="c.notes && c.notes.length > 0"
-    class="has-text-grey is-italic"
-  >
-    {{ c.notes }}
-  </p>
-</td>
-  <td>{{ getGymnaseList(c.gymnase) }}</td>
-  <td class="is-flex is-align-items-center">
-    <!-- Bouton Valider -->
-    <button class="button is-primary is-small" (click)="validerCreneau(c.id)">
-      Valider
-    </button>
-
-    <!-- Icône d'info, seulement si c.notes existe et n'est pas vide -->
-   
-  </td>
-</tr>
-
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mb-5">
-      <h3 class="subtitle is-5 is-warning">Créneaux acceptables</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
-        <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
-        <tbody>
-          <tr *ngFor="let c of creneauxNonRecommandes">
-  <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
-  <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
-  <td>
-  <!-- ton motif (liste UL) -->
-  <div [innerHTML]="c.motif"></div>
-
-  <!-- tes notes (si présentes) -->
-  <p
-    *ngIf="c.notes && c.notes.length > 0"
-    class="has-text-grey is-italic"
-  >
-    {{ c.notes }}
-  </p>
-</td>
-  <td>{{ getGymnaseList(c.gymnase) }}</td>
-  <td class="is-flex is-align-items-center">
-    <!-- Bouton Valider -->
-    <button class="button is-warning is-small" (click)="validerCreneau(c.id)">
-      Valider
-    </button>
-
-  </td>
-</tr>
-
-        </tbody>
-      </table>
-    </div>
-
-    <div>
-      <h3 class="subtitle is-5 is-danger">Créneaux déconseillés</h3>
-      <table class="table is-fullwidth is-hoverable is-bordered is-size-6">
-        <thead><tr><th>Date</th><th>Heure</th><th>Motif / Notes</th><th>Gymnase</th><th></th></tr></thead>
-        <tbody>
-           <tr *ngFor="let c of creneauxDeconseilles">
-  <td>{{ c.date | date:'dd/MM/yyyy' }}</td>
-  <td>{{ c.heure_debut }} - {{ c.heure_fin }}</td>
-  
-  <td>
-  <!-- ton motif (liste UL) -->
-  <div [innerHTML]="c.motif"></div>
-
-  <!-- tes notes (si présentes) -->
-  <p
-    *ngIf="c.notes && c.notes.length > 0"
-    class="has-text-grey is-italic"
-  >
-    {{ c.notes }}
-  </p>
-</td>
-  <td>{{ getGymnaseList(c.gymnase) }}</td>
-  <td class="is-flex is-align-items-center">
-    <!-- Bouton Valider -->
-    <button class="button is-danger is-small" (click)="validerCreneau(c.id)">
-      Valider
-    </button>
-
-  </td>
-</tr>
-
-        </tbody>
-      </table>
-    </div>
-   </section>
 </div>

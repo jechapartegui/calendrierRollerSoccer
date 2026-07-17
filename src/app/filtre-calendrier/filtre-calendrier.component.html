@@ -1,0 +1,221 @@
+<div class="calendar-filter">
+
+  <div class="filter-header">
+
+    <div>
+      <span class="filter-eyebrow">
+        Filtres
+      </span>
+
+      <strong>
+        {{
+          isCalendrierMode
+            ? 'Affiner le calendrier'
+            : 'Rechercher des matchs'
+        }}
+      </strong>
+    </div>
+
+    <button
+      type="button"
+      class="reset-button"
+      (click)="reset()"
+    >
+      Réinitialiser
+    </button>
+
+  </div>
+
+  <div class="filter-grid">
+
+    <div class="filter-field">
+      <label for="filterClub">
+        Club
+      </label>
+
+      <select
+        id="filterClub"
+        [(ngModel)]="selectedClub"
+        (ngModelChange)="onChange()"
+      >
+        <option [ngValue]="null">
+          Tous les clubs
+        </option>
+
+        <option
+          *ngFor="let club of clubs"
+          [ngValue]="club.id"
+        >
+          {{ club.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="filterCategorie">
+        Catégorie
+      </label>
+
+      <select
+        id="filterCategorie"
+        [(ngModel)]="selectedCategorie"
+        (ngModelChange)="onChange()"
+      >
+        <option [ngValue]="null">
+          Toutes les catégories
+        </option>
+
+        <option
+          *ngFor="let categorie of categories"
+          [ngValue]="categorie.id"
+        >
+          {{ categorie.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="filterEquipe">
+        Équipe
+      </label>
+
+      <select
+        id="filterEquipe"
+        [(ngModel)]="selectedEquipe"
+        (ngModelChange)="onChange()"
+      >
+        <option [ngValue]="null">
+          Toutes les équipes
+        </option>
+
+        <option
+          *ngFor="let equipe of equipesFiltrees"
+          [ngValue]="equipe.id"
+        >
+          {{ equipe.nom }}
+          ·
+          {{
+            getCategorieNom(
+              equipe.categorie
+            )
+          }}
+        </option>
+      </select>
+    </div>
+
+    <div
+      *ngIf="!isCalendrierMode"
+      class="filter-field"
+    >
+      <label for="filterPlanifie">
+        Planification
+      </label>
+
+      <select
+        id="filterPlanifie"
+        [(ngModel)]="selectedPlanifie"
+        (ngModelChange)="onChange()"
+      >
+        <option [ngValue]="null">
+          Tous les états
+        </option>
+
+        <option [ngValue]="true">
+          Planifiés
+        </option>
+
+        <option [ngValue]="false">
+          À planifier
+        </option>
+      </select>
+    </div>
+
+    <ng-container
+      *ngIf="isCalendrierMode"
+    >
+
+      <div class="filter-field">
+        <label for="filterDateDebut">
+          À partir du
+        </label>
+
+        <input
+          id="filterDateDebut"
+          type="date"
+          [(ngModel)]="dateDebut"
+          (ngModelChange)="onChange()"
+        >
+      </div>
+
+      <div class="filter-field">
+        <label for="filterDateFin">
+          Jusqu’au
+        </label>
+
+        <input
+          id="filterDateFin"
+          type="date"
+          [(ngModel)]="dateFin"
+          (ngModelChange)="onChange()"
+        >
+      </div>
+
+    </ng-container>
+
+  </div>
+
+  <div
+    *ngIf="isCalendrierMode"
+    class="content-switches"
+  >
+
+    <label class="content-switch">
+      <input
+        type="checkbox"
+        [(ngModel)]="afficherMatchs"
+        (ngModelChange)="onChange()"
+      >
+
+      <span>Matchs</span>
+    </label>
+
+    <label class="content-switch">
+      <input
+        type="checkbox"
+        [(ngModel)]="afficherEvenements"
+        (ngModelChange)="onChange()"
+      >
+
+      <span>Vacances et jours fériés</span>
+    </label>
+
+    <label class="content-switch">
+      <input
+        type="checkbox"
+        [(ngModel)]="afficherIndisponibilites"
+        (ngModelChange)="onChange()"
+      >
+
+      <span>
+        Indisponibilités
+        <small>
+          {{ indisponibilites.length }}
+        </small>
+      </span>
+    </label>
+
+    <label class="content-switch is-strong">
+      <input
+        type="checkbox"
+        [(ngModel)]="uniquementAvecContenu"
+        (ngModelChange)="onChange()"
+      >
+
+      <span>
+        Masquer les journées vides
+      </span>
+    </label>
+
+  </div>
+
+</div>
