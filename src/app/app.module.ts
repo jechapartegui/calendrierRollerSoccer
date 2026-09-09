@@ -8,8 +8,7 @@ import {
   registerLocaleData
 } from '@angular/common';
 
-import localeFr
-  from '@angular/common/locales/fr';
+import localeFr from '@angular/common/locales/fr';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -24,26 +23,31 @@ import { FiltreCalendrierComponent } from './filtre-calendrier/filtre-calendrier
 import { MatchPlanningComponent } from './match-planning/match-planning.component';
 import { FilterByDatePipe } from './filterDate.pipe';
 import { FilterByGymnasePipe } from './filterGymnase.pipe';
-registerLocaleData(
-  localeFr,
-  'fr-FR'
-);
+import { ShowcaseComponent } from './showcase/showcase.component';
+
+registerLocaleData(localeFr, 'fr-FR');
+
 @NgModule({
   declarations: [
     AppComponent,
     ClubComponent,
     MainComponent,
     FormulaireCreneauComponent,
-    FiltreCalendrierComponent, MatchPlanningComponent, FilterByDatePipe,
+    FiltreCalendrierComponent,
+    MatchPlanningComponent,
+    FilterByDatePipe,
     FilterByGymnasePipe,
+    ShowcaseComponent
   ],
   imports: [
-    BrowserModule, HttpClientModule,
-    AppRoutingModule, FormsModule
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule,
+    FormsModule
   ],
   providers: [
-    DatePipe, DbService,
-
+    DatePipe,
+    DbService,
     {
       provide: LOCALE_ID,
       useValue: 'fr-FR'
