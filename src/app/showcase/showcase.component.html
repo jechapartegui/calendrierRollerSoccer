@@ -1,0 +1,282 @@
+<main class="showcase-page">
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="RollerSoccer France - Accueil" (click)="closeMenu()">
+      <span class="brand-roller">ROLLER</span>
+      <span class="brand-soccer">SOCCER</span>
+      <span class="brand-france">FRANCE</span>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="Ouvrir le menu"
+      [attr.aria-expanded]="mobileMenuOpen"
+      (click)="toggleMenu()"
+    >
+      <span></span><span></span>
+    </button>
+
+    <nav class="main-nav" [class.open]="mobileMenuOpen" aria-label="Navigation principale">
+      <a href="#comprendre" (click)="closeMenu()">Le sport</a>
+      <a href="#categories" (click)="closeMenu()">Catégories</a>
+      <a href="#voir" (click)="closeMenu()">Voir des matchs</a>
+      <a href="#palmares" (click)="closeMenu()">Palmarès</a>
+      <a class="nav-cta" href="#contact" (click)="closeMenu()">Nous rejoindre</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <video
+      class="hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="https://www.usivryroller.fr/assets/media/soccer/youth-belgium.webp"
+      aria-hidden="true"
+    >
+      <source src="https://www.usivryroller.fr/assets/media/soccer/youth-belgium.mp4" type="video/mp4">
+    </video>
+    <div class="hero-shade"></div>
+
+    <div class="hero-content">
+      <p class="eyebrow">Championnat de France · FFRS</p>
+      <h1>Le foot.<br><em>En roller.</em></h1>
+      <p class="hero-lead">
+        Un sport collectif rapide, technique et spectaculaire. Des premiers matchs U11 jusqu’au championnat Élite,
+        le RollerSoccer se joue aujourd’hui à tous les âges et à plusieurs niveaux de pratique.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#contact">Je veux jouer / créer une équipe</a>
+        <a class="button button-ghost" href="#voir">Voir le RollerSoccer en action <span aria-hidden="true">↘</span></a>
+      </div>
+    </div>
+
+    <div class="hero-facts" aria-label="Le RollerSoccer en trois chiffres">
+      <div><strong>5 vs 5</strong><span>sur la piste</span></div>
+      <div><strong>40 × 20 m</strong><span>terrain idéal</span></div>
+      <div><strong>U11 → Élite</strong><span>une filière complète</span></div>
+    </div>
+  </section>
+
+  <section class="intro section" id="comprendre">
+    <div class="section-heading intro-heading">
+      <p class="section-index">01 — Comprendre</p>
+      <h2>Du football, mais avec une autre vitesse.</h2>
+      <p>
+        Le principe tient en une phrase : deux équipes, un ballon, deux buts — et des rollers aux pieds.
+        Ensuite, tout change : les accélérations, les transitions, les angles de passe et la façon de défendre.
+      </p>
+    </div>
+
+    <div class="rules-layout">
+      <div class="rules-big">
+        <span class="rule-number">05</span>
+        <p>joueurs maximum par équipe sur la piste, changements libres pendant le jeu.</p>
+      </div>
+
+      <div class="rule-list">
+        <article>
+          <span>01</span>
+          <div><h3>Pas de gardien avec les mains</h3><p>Le dernier défenseur reste un joueur comme les autres. Les mains sont interdites.</p></div>
+        </article>
+        <article>
+          <span>02</span>
+          <div><h3>Des buts bas, du jeu partout</h3><p>Les cages mesurent 3 m de large sur 1 m de haut, avec du jeu possible derrière le but.</p></div>
+        </article>
+        <article>
+          <span>03</span>
+          <div><h3>Une pratique mixte</h3><p>Les équipes mixtes sont autorisées en U11, U15, U19 et chez les seniors.</p></div>
+        </article>
+        <article>
+          <span>04</span>
+          <div><h3>En salle… ou dehors</h3><p>Le règlement prévoit la pratique en salle et sur un sol extérieur lisse adapté.</p></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="rules-link-row">
+      <p>Ces repères résument le règlement sportif FFRS 2026–2027.</p>
+      <a href="https://ffroller-skateboard.fr/blog/discipline/roller_soccer/" target="_blank" rel="noopener noreferrer">
+        Espace RollerSoccer de la FFRS <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="categories section" id="categories">
+    <div class="section-heading split-heading">
+      <div>
+        <p class="section-index">02 — Pour qui ?</p>
+        <h2>Une catégorie pour chaque étape.</h2>
+      </div>
+      <p>
+        La saison 2026–2027 affine les catégories jeunes pour réduire les écarts d’âge. Le surclassement reste possible
+        dans le cadre des règles fédérales et médicales applicables.
+      </p>
+    </div>
+
+    <div class="category-grid">
+      <article class="category-card" *ngFor="let category of categories">
+        <div class="category-top">
+          <h3>{{ category.name }}</h3>
+          <span>{{ category.duration }}</span>
+        </div>
+        <p class="category-years">{{ category.years }}</p>
+        <p>{{ category.description }}</p>
+      </article>
+    </div>
+
+    <div class="levels-strip">
+      <div class="levels-copy">
+        <span>Une pratique qui s’adapte</span>
+        <h3>Découverte. Loisir. Compétition. Élite.</h3>
+      </div>
+      <p>
+        Pas besoin d’arriver avec une équipe prête à jouer le titre. Le championnat s’est élargi avec une Nationale 1
+        et des formats permettant à des collectifs plus récents de se confronter à des équipes de leur niveau.
+      </p>
+    </div>
+  </section>
+
+  <section class="growth section">
+    <div class="growth-grid">
+      <div class="growth-statement">
+        <p class="section-index light">03 — Développer</p>
+        <h2>Les clubs grandissent.<br>Il nous faut maintenant <em>plus de clubs.</em></h2>
+      </div>
+      <div class="growth-copy">
+        <p>
+          Le RollerSoccer français s’est structuré vite : championnat national reconnu par la FFRS, catégories jeunes,
+          niveau Élite, Nationale 1 et une communauté qui produit de plus en plus de matchs et de contenus.
+        </p>
+        <p>
+          En janvier 2025, la FFRS recensait déjà plus de 7 clubs et environ une centaine de licenciés. Depuis, les effectifs
+          continuent de progresser dans les structures existantes. Le prochain cap est simple : ouvrir de nouveaux points de pratique.
+        </p>
+        <a class="text-link light-link" href="#contact">Parler de mon projet de club <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="growth-steps">
+      <article><span>1</span><h3>Vous avez déjà un club de roller ?</h3><p>On peut vous aider à lancer une première séance et trouver un format adapté à vos effectifs.</p></article>
+      <article><span>2</span><h3>Vous avez quelques joueurs ?</h3><p>Une équipe peut se construire progressivement, avec des rencontres amicales avant l’engagement en championnat.</p></article>
+      <article><span>3</span><h3>Vous voulez entrer en compétition ?</h3><p>Nous vous orientons vers la bonne catégorie, les démarches FFRS et les interlocuteurs du championnat.</p></article>
+    </div>
+  </section>
+
+  <section class="watch section" id="voir">
+    <div class="section-heading split-heading watch-heading">
+      <div>
+        <p class="section-index">04 — Regarder</p>
+        <h2>Le meilleur argument ?<br>Voir un match.</h2>
+      </div>
+      <p>
+        Pas de montage promotionnel abstrait : voici le sport tel qu’il se joue vraiment. Matchs complets, actions,
+        ambiance de gymnase et regards de créateurs qui ont aidé la discipline à sortir de son cercle habituel.
+      </p>
+    </div>
+
+    <div class="featured-media">
+      <div class="featured-video-wrap">
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          poster="https://www.usivryroller.fr/assets/media/soccer/goal-argenteuil.webp"
+        >
+          <source src="https://www.usivryroller.fr/assets/media/soccer/goal-argenteuil.mp4" type="video/mp4">
+          Votre navigateur ne prend pas en charge la vidéo.
+        </video>
+      </div>
+      <div class="featured-copy">
+        <span class="media-label">Sur le terrain</span>
+        <h3>Quelques secondes suffisent pour comprendre pourquoi ça marche.</h3>
+        <p>Une accélération, un décalage, un tir. Les repères du football restent là, mais tout va plus vite.</p>
+        <a href="https://www.instagram.com/donnie_laket/" target="_blank" rel="noopener noreferrer">
+          Voir le regard de Donnie LaKet <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="channel-grid">
+      <a class="channel-card" *ngFor="let channel of mediaChannels" [href]="channel.url" target="_blank" rel="noopener noreferrer">
+        <span class="channel-tag">{{ channel.tag }}</span>
+        <h3>{{ channel.name }}</h3>
+        <p>{{ channel.detail }}</p>
+        <span class="channel-arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
+
+    <div class="social-line">
+      <p>Résultats, photos, annonces et coulisses du championnat.</p>
+      <a href="https://www.instagram.com/rollersoccerfr/" target="_blank" rel="noopener noreferrer">@rollersoccerfr sur Instagram ↗</a>
+    </div>
+  </section>
+
+  <section class="honours section" id="palmares">
+    <div class="section-heading split-heading">
+      <div>
+        <p class="section-index">05 — Palmarès récent</p>
+        <h2>Ceux qui ont pris<br>la dernière ligne droite.</h2>
+      </div>
+      <p>
+        Le format des catégories évolue en 2026–2027 : le palmarès ci-dessous conserve donc les appellations utilisées
+        au moment où les titres ont été remportés.
+      </p>
+    </div>
+
+    <div class="honours-list">
+      <article class="honour-season" *ngFor="let season of honours">
+        <h3>{{ season.season }}</h3>
+        <div class="honour-results">
+          <div class="honour-row" *ngFor="let result of season.results">
+            <span>{{ result.label }}</span>
+            <strong>{{ result.club }}</strong>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="contact section" id="contact">
+    <div class="contact-panel">
+      <div class="contact-copy">
+        <p class="section-index light">06 — Et maintenant ?</p>
+        <h2>Vous avez des rollers,<br>un ballon et une idée ?</h2>
+        <p>
+          Écrivez-nous. Que vous cherchiez un club, souhaitiez lancer une section, organiser une rencontre ou engager
+          une équipe en championnat, on vous aide à trouver le chemin le plus simple.
+        </p>
+      </div>
+      <div class="contact-actions">
+        <a
+          class="button button-white"
+          href="mailto:rollersoccer@ffroller-skateboard.com?subject=Projet%20RollerSoccer%20-%20rejoindre%20la%20discipline"
+        >
+          Contacter la commission RollerSoccer
+        </a>
+        <a
+          class="button button-outline-white"
+          href="mailto:competitions@ffroller-skateboard.com?subject=Engagement%20championnat%20RollerSoccer"
+        >
+          Parler engagement / championnat
+        </a>
+        <a class="contact-instagram" href="https://www.instagram.com/rollersoccerfr/" target="_blank" rel="noopener noreferrer">
+          ou nous écrire sur Instagram @rollersoccerfr ↗
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <span class="brand-roller">ROLLER</span><span class="brand-soccer">SOCCER</span><span class="brand-france">FRANCE</span>
+    </div>
+    <p>Discipline reconnue et organisée au sein de la Fédération Française de Roller & Skateboard.</p>
+    <div class="footer-links">
+      <a href="https://ffroller-skateboard.fr/blog/discipline/roller_soccer/" target="_blank" rel="noopener noreferrer">FFRS ↗</a>
+      <a href="https://www.instagram.com/rollersoccerfr/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+      <a routerLink="/clubs">Espace clubs</a>
+    </div>
+  </footer>
+</main>
